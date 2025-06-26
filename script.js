@@ -1,6 +1,6 @@
 // script.js
 
-const OPENROUTER_API_KEY = "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";
+const OPENROUTER_API_KEY = "sk-or-v1-testonly-b3b8e935f2124b8fbe5f64f8fd94c458";
 const REPLICATE_API_TOKEN = "r8_CnLIrlo81aiinGdiTmCH3wGclAaTykv0fUNSJ";
 
 let memory = JSON.parse(localStorage.getItem("camille_memory")) || {
@@ -50,22 +50,31 @@ async function envoyerMessage() {
     max_tokens: 500
   };
 
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  });
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://camille.vercel.app",
+        "X-Title": "Camille"
+      },
+      body: JSON.stringify(payload)
+    });
 
-  const data = await res.json();
-  const reply = data.choices?.[0]?.message?.content || "Erreur de réponse.";
+    if (!res.ok) throw new Error("Réponse OpenRouter invalide");
 
-  memory.messages.push({ role: "assistant", content: reply });
-  saveMemory();
-  afficherMessage("assistant", reply);
-  input.value = "";
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || "Erreur de génération.";
+
+    memory.messages.push({ role: "assistant", content: reply });
+    saveMemory();
+    afficherMessage("assistant", reply);
+    input.value = "";
+  } catch (error) {
+    afficherMessage("assistant", "❌ Erreur de réponse API (clé invalide ou modèle désactivé).");
+    console.error("Erreur OpenRouter:", error);
+  }
 }
 
 sendBtn.addEventListener("click", envoyerMessage);
