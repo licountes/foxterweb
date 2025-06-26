@@ -1,8 +1,7 @@
 // script.js
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
-
+const OPENROUTER_API_KEY = "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";
+const REPLICATE_API_TOKEN = "r8_CnLIrlo81aiinGdiTmCH3wGclAaTykv0fUNSJ";
 
 let memory = JSON.parse(localStorage.getItem("camille_memory")) || {
   user: { prénom: null, âge: null, ville: null, passions: [] },
