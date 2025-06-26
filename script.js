@@ -1,6 +1,6 @@
 // script.js
 
-const OPENROUTER_API_KEY = "sk-or-v1-testonly-b3b8e935f2124b8fbe5f64f8fd94c458";
+const OPENROUTER_API_KEY = "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";
 const REPLICATE_API_TOKEN = "r8_CnLIrlo81aiinGdiTmCH3wGclAaTykv0fUNSJ";
 
 let memory = JSON.parse(localStorage.getItem("camille_memory")) || {
