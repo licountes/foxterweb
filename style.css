@@ -1,0 +1,74 @@
+/* style.css */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #1c1c1c;
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+}
+#app {
+  display: flex;
+  height: 100vh;
+}
+#chat-container {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow: hidden;
+}
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  background: #2a2a2a;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+#input-area {
+  display: flex;
+}
+#user-input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  background: #333;
+  color: white;
+}
+#send-btn {
+  padding: 10px 20px;
+  margin-left: 10px;
+  border: none;
+  border-radius: 8px;
+  background-color: #ff4081;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+#side-panel {
+  flex: 1;
+  background: #2a2a2a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  gap: 20px;
+}
+#camille-img {
+  width: 100%;
+  max-width: 300px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+#generate-image {
+  background-color: #00bcd4;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
