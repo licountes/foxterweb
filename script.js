@@ -1,5 +1,5 @@
-// ✅ SCRIPT CAMILLE FINAL - FUSION COMPLÈTE BASE SEB + CORRECTIFS
-// Mémoire, JSON, Mood, Résumé auto, Langage Hot
+// ✅ SCRIPT CAMILLE FINAL CORRIGÉ EN ENTIER
+// 🔧 Inclut extractUserInfo corrigée, tout le reste intact
 
 const chatWindow = document.getElementById("chat-window");
 const userInput = document.getElementById("user-input");
