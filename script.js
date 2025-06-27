@@ -316,3 +316,48 @@ imageButton.onclick = () => {
   const prompt = getImagePrompt();
   addMessage("👩 Camille", phrase + "\n(image simulée sur prompt : " + prompt + ")");
 };
+
+// 📁 Fonction : exporter la mémoire en fichier .json
+function exportMemoryToFile() {
+  const blob = new Blob([JSON.stringify(memory, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "camille_memory.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// 📁 Fonction : importer la mémoire depuis un fichier camille_memory.json
+function loadMemoryFromFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      memory = JSON.parse(reader.result);
+      localStorage.setItem("camille_memory", JSON.stringify(memory));
+      alert("Mémoire rechargée avec succès !");
+      location.reload();
+    } catch (e) {
+      alert("Erreur lors du chargement du fichier.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ✅ Ajout des boutons dans la page automatiquement
+const exportBtn = document.createElement("button");
+exportBtn.textContent = "💾 Sauver mémoire";
+exportBtn.onclick = exportMemoryToFile;
+document.body.appendChild(exportBtn);
+
+const importInput = document.createElement("input");
+importInput.type = "file";
+importInput.style.display = "none";
+importInput.accept = ".json";
+importInput.onchange = () => loadMemoryFromFile(importInput.files[0]);
+document.body.appendChild(importInput);
+
+const importBtn = document.createElement("button");
+importBtn.textContent = "📂 Charger mémoire";
+importBtn.onclick = () => importInput.click();
+document.body.appendChild(importBtn);
