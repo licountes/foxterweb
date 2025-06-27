@@ -50,18 +50,21 @@ function summarizeMemory() {
 
 
 function extractUserInfo(text) {
-  const prenomMatch = text.match(/(?:je m'appelle|je suis)\s+([A-Za-zÀ-ÿ\-]+)/i);
-  const ageMatch = text.match(/j[’']?ai\s+(\d{1,3})\s+ans/i);
-  const villeMatch = text.match(/j[’']?habite\s+(?:à\s+)?([A-Za-zÀ-ÿ\-]+)/i);
-  const passionsMatch = text.match(/j(?:'|e)?\s?aime\s+([^\.\n]+)/i);
+  const prenomMatch = text.match(/m'appelle\\s+([A-Za-zÀ-ÿ\\-]+)/i);
+  const ageMatch = text.match(/j'ai\\s+(\\d{1,2})\\s+ans/i);
+  const villeMatch = text.match(/j'habite\\s+(?:à\\s+)?([A-Za-zÀ-ÿ\\-]+)/i);
+  const passionsMatch = text.match(/j'aime\\s+(.+?)(\\.|$)/i);
 
   if (prenomMatch) memory.user.prenom = prenomMatch[1];
   if (ageMatch) memory.user.age = ageMatch[1];
   if (villeMatch) memory.user.ville = villeMatch[1];
   if (passionsMatch) {
-    memory.user.passions = passionsMatch[1].split(',').map(p => p.trim());
+    memory.user.passions = passionsMatch[1]
+      .split(",")
+      .map((x) => x.trim());
   }
 }
+
 
   const prenomMatch = text.match(/m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
   const ageMatch = text.match(/j'ai\s+(\d{1,2})\s+ans/i);
