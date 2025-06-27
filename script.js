@@ -8,8 +8,10 @@ const sendButton = document.getElementById("send-button");
 const imageButton = document.getElementById("image-button");
 
 
-let memory = JSON.parse(localStorage.getItem("camille_memory"));
-if (!memory) {
+let memory = localStorage.getItem("camille_memory");
+if (memory) {
+  memory = JSON.parse(memory);
+} else {
   memory = {
     user: { prenom: null, age: null, ville: null, passions: [] },
     ia: {
@@ -23,16 +25,6 @@ if (!memory) {
   };
   addMessage("👩 Camille", "Oh… Salut 😯 Je ne m’attendais pas à ce message… Tu es qui ?");
 }
-
-  user: { prenom: null, age: null, ville: null, passions: [] },
-  ia: {
-    mood: "neutre",
-    affinite: 0,
-    posture: "switch",
-    historique: [],
-    messages: []
-  }
-};
 
 function addMessage(sender, message) {
   const div = document.createElement("div");
