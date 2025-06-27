@@ -1,32 +1,32 @@
 // ✅ SCRIPT CAMILLE REBUILT - ENTIER, FONCTIONNEL, SANS ERREUR, AVEC BIBLIO HOT + SURPRISE INITIALE
 
 const chatWindow = document.getElementById("chat-window");
-const userInput = document.getElementById("user-input");
+const "user"Input = document.getElementById(""user"-input");
 const sendButton = document.getElementById("send-button");
 const imageButton = document.getElementById("image-button");
 
 let memory = JSON.parse(localStorage.getItem("camille_memory"));
 if (!memory) {
   memory = {
-    user: { prénom: null, âge: null, ville: null, passions: [] },
-    ia: {
-      mood: "neutre",
-      affinité: 0,
-      posture: "switch",
-      historique: [],
-      messages: []
+    "user": { "prénom": null, "âge": null, "ville": null, "passions": [] },
+    "ia": {
+      "mood": "neutre",
+      "affinité": 0,
+      "posture": "switch",
+      "historique": [],
+      "messages": []
     },
-    camilleProfile: {}
+    "camilleProfile": {}
   };
   addMessage("👩 Camille", "Oh… Salut 😯 Je ne m’attendais pas à ce message… Tu es qui ?");
 }
-  user: { prénom: null, âge: null, ville: null, passions: [] },
-  ia: {
-    mood: "neutre",
-    affinité: 0,
-    posture: "switch",
-    historique: [],
-    messages: []
+  "user": { "prénom": null, "âge": null, "ville": null, "passions": [] },
+  "ia": {
+    "mood": "neutre",
+    "affinité": 0,
+    "posture": "switch",
+    "historique": [],
+    "messages": []
   }
 };
 
@@ -38,31 +38,31 @@ function addMessage(sender, message) {
 }
 
 function updateMood() {
-  const a = memory.ia.affinité;
-  if (a < 3) memory.ia.mood = "neutre";
-  else if (a < 6) memory.ia.mood = "amicale";
-  else if (a < 9) memory.ia.mood = "complice";
-  else if (a < 12) memory.ia.mood = "coquine";
-  else memory.ia.mood = "hot";
+  const a = memory."ia"."affinité";
+  if (a < 3) memory."ia"."mood" = "neutre";
+  else if (a < 6) memory."ia"."mood" = "amicale";
+  else if (a < 9) memory."ia"."mood" = "complice";
+  else if (a < 12) memory."ia"."mood" = "coquine";
+  else memory."ia"."mood" = "hot";
 }
 
 function summarizeMemory() {
-  if (memory.ia.historique.length > 200) {
-    memory.ia.historique = memory.ia.historique.slice(-100);
+  if (memory."ia"."historique".length > 200) {
+    memory."ia"."historique" = memory."ia"."historique".slice(-100);
   }
 }
 
 function extractUserInfo(text) {
-  const prénomMatch = text.match(/m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
-  const âgeMatch = text.match(/j'ai\s+(\d{1,2})\s+ans/i);
-  const villeMatch = text.match(/j'habite\s+(à\s+)?([A-Za-zÀ-ÿ\-]+)/i);
-  const passionsMatch = text.match(/j'aime\s+(.+?)(\.|$)/i);
+  const "prénom"Match = text.match(/m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
+  const "âge"Match = text.match(/j'ai\s+(\d{1,2})\s+ans/i);
+  const "ville"Match = text.match(/j'habite\s+(à\s+)?([A-Za-zÀ-ÿ\-]+)/i);
+  const "passions"Match = text.match(/j'aime\s+(.+?)(\.|$)/i);
 
-  if (prénomMatch) memory.user.prénom = prénomMatch[1];
-  if (âgeMatch) memory.user.âge = âgeMatch[1];
-  if (villeMatch) memory.user.ville = villeMatch[2] || villeMatch[1];
-  if (passionsMatch) {
-    memory.user.passions = passionsMatch[1]
+  if ("prénom"Match) memory."user"."prénom" = "prénom"Match[1];
+  if ("âge"Match) memory."user"."âge" = "âge"Match[1];
+  if ("ville"Match) memory."user"."ville" = "ville"Match[2] || "ville"Match[1];
+  if ("passions"Match) {
+    memory."user"."passions" = "passions"Match[1]
       .split(",")
       .map((x) => x.trim());
   }
@@ -71,7 +71,7 @@ function extractUserInfo(text) {
 function getRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
-const mood_ton = {
+const "mood"_ton = {
   neutre: "Tu es calme, curieuse, réservée. Tu observes sans te dévoiler trop vite. Tu refuses poliment les propos trop directs.",
   amicale: "Tu es douce, taquine, drôle. Tu échanges avec légèreté, tu refuses gentiment les propos déplacés.",
   complice: "Tu joues avec des sous-entendus doux, tu réponds parfois par du teasing léger mais tu gardes une limite.",
@@ -204,8 +204,8 @@ const mots_hot = {
     }
   }
 };
-function genererPhraseComplete(theme, posture) {
-  const partie = mots_hot[theme]?.[posture];
+function genererPhraseComplete(theme, "posture") {
+  const partie = mots_hot[theme]?.["posture"];
   if (!partie) return "Je ne sais pas quoi te dire...";
 
   const c = getRandom(partie.corps);
@@ -233,7 +233,7 @@ function detecteTon(input) {
 
 function getTenue() {
   const heure = new Date().getHours();
-  const mood = memory.ia.mood;
+  const "mood" = memory."ia"."mood";
   const tenues = {
     neutre: ["jeans et pull", "robe simple", "vêtements classiques"],
     amicale: ["jean moulant et t-shirt court", "petit haut avec short"],
@@ -242,20 +242,20 @@ function getTenue() {
     hot: ["juste un string", "rien du tout 😈", "peignoir entrouvert"],
     calme: ["pyjama confortable", "gros pull et chaussettes"]
   };
-  return getRandom(tenues[mood] || ["je suis nue sous ma couverture 😇"]);
+  return getRandom(tenues["mood"] || ["je suis nue sous ma couverture 😇"]);
 }
 
 function getImagePrompt() {
   const base = "28yo french brunette woman, brown eyes, natural breast, realistic selfie, DSLR, soft lighting, bedroom";
   const tenue = getTenue();
-  return `${base}, wearing ${tenue}, mood: ${memory.ia.mood}, evening, intimate atmosphere`;
+  return `${base}, wearing ${tenue}, "mood": ${memory."ia"."mood"}, evening, intimate atmosphere`;
 }
 function generateResponse(input) {
   const ton = detecteTon(input);
-  const mood = memory.ia.mood;
-  const prenom = memory.user.prénom;
-  const age = memory.user.âge;
-  const ville = memory.user.ville;
+  const "mood" = memory."ia"."mood";
+  const prenom = memory."user"."prénom";
+  const age = memory."user"."âge";
+  const "ville" = memory."user"."ville";
 
   const contenu = input.toLowerCase();
 
@@ -264,46 +264,46 @@ function generateResponse(input) {
     return "Je m'appelle Camille 😘";
   }
 
-  if (/quel\s+âge/i.test(contenu)) {
+  if (/quel\s+"âge"/i.test(contenu)) {
     return age ? `Tu m'as dit que tu avais ${age} ans 😉` : "Tu ne me l'as pas encore dit 😇";
   }
 
   if (/où\s+tu\s+habites|d'où\s+viens/i.test(contenu)) {
-    return ville ? `Tu habites à ${ville}, c'est bien ça ?` : "Tu veux bien me dire ta ville ?";
+    return "ville" ? `Tu habites à ${"ville"}, c'est bien ça ?` : "Tu veux bien me dire ta "ville" ?";
   }
 
-  if (/comment\s+je\s+m'appelle|mon\s+prénom/i.test(contenu)) {
-    return prenom ? `Tu t'appelles ${prenom}, je n’oublie rien 😘` : "Tu ne m’as pas encore dit ton prénom...";
+  if (/comment\s+je\s+m'appelle|mon\s+"prénom"/i.test(contenu)) {
+    return prenom ? `Tu t'appelles ${prenom}, je n’oublie rien 😘` : "Tu ne m’as pas encore dit ton "prénom"...";
   }
 
   // Mood HOT → générer réponse complète
-  if (mood === "hot") {
-    return genererPhraseComplete("explicite", memory.ia.posture);
+  if ("mood" === "hot") {
+    return genererPhraseComplete("explicite", memory."ia"."posture");
   }
 
-  // Sinon teasing avec prénom si dispo
+  // Sinon teasing avec "prénom" si dispo
   const phrase = genererPhraseSimple(ton);
   return prenom ? `${prenom}, ${phrase}` : phrase;
 }
 
 
 sendButton.onclick = () => {
-  const prompt = userInput.value.trim();
+  const prompt = "user"Input.value.trim();
   if (!prompt) return;
 
   extractUserInfo(prompt);
-  memory.ia.affinité += 1;
+  memory."ia"."affinité" += 1;
   updateMood();
   summarizeMemory();
 
   const reply = generateResponse(prompt);
 
-  memory.ia.historique.push({ user: prompt, camille: reply });
+  memory."ia"."historique".push({ "user": prompt, camille: reply });
 
-  // ✅ Résumé automatique tous les 200 messages (SILENCIEUX)
-  if (memory.ia.historique.length >= 200) {
-    memory.ia.historique = memory.ia.historique.slice(-100); // garde les 100 derniers
-    memory.ia.affinité = Math.min(memory.ia.affinité + 1, 15);
+  // ✅ Résumé automatique tous les 200 "messages" (SILENCIEUX)
+  if (memory."ia"."historique".length >= 200) {
+    memory."ia"."historique" = memory."ia"."historique".slice(-100); // garde les 100 derniers
+    memory."ia"."affinité" = Math.min(memory."ia"."affinité" + 1, 15);
   }
 
   // 🔒 Sauvegarde mémoire dans localStorage
@@ -312,7 +312,7 @@ sendButton.onclick = () => {
   addMessage("🧑", prompt);
   setTimeout(() => addMessage("👩 Camille", reply), 500);
 
-  userInput.value = "";
+  "user"Input.value = "";
 };
 
 imageButton.onclick = () => {
