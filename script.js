@@ -245,41 +245,33 @@ function getImagePrompt() {
   const tenue = getTenue();
   return `${base}, wearing ${tenue}, mood: ${memory.ia.mood}, evening, intimate atmosphere`;
 }
+
 function generateResponse(input) {
   const ton = detecteTon(input);
   const mood = memory.ia.mood;
   const prenom = memory.user.prenom;
   const age = memory.user.age;
   const ville = memory.user.ville;
-
   const contenu = input.toLowerCase();
 
   // Réponses personnalisées
-  if (/comment\s+tu\s+t'appelles|ton\s+nom/i.test(contenu)) {
-    return "Je m'appelle Camille 😘";
-  }
+  if (/comment tu t'appelles|ton nom/i.test(contenu)) return "Je m'appelle Camille 😘";
+  if (/quel age/i.test(contenu)) return age ? `Tu m'as dit que tu avais ${age} ans 😉` : "Tu ne me l'as pas encore dit 😇";
+  if (/où tu habites|d'où viens/i.test(contenu)) return ville ? `Tu habites à ${ville}, c'est bien ça ?` : "Tu veux bien me dire ta ville ?";
+  if (/comment je m'appelle|mon prenom/i.test(contenu)) return prenom ? `Tu t'appelles ${prenom}, je n’oublie rien 😘` : "Tu ne m’as pas encore dit ton prénom...";
 
-  if (/quel\s+age/i.test(contenu)) {
-    return age ? `Tu m'as dit que tu avais ${age} ans 😉` : "Tu ne me l'as pas encore dit 😇";
-  }
+  // Réponses en fonction du mood
+  if (mood === "hot") return genererPhraseComplete("explicite", memory.ia.posture);
+  if (mood === "coquine") return genererPhraseComplete("teasing", memory.ia.posture);
+  if (mood === "complice") return "Tu me fais sourire sans même essayer 😏";
+  if (mood === "amicale") return "C’est sympa de discuter avec toi 😊";
+  if (mood === "neutre") return "Tu veux discuter un peu ?";
+  if (mood === "surprise") return "Oh... Je ne m’attendais pas à te voir 😯";
 
-  if (/où\s+tu\s+habites|d'où\s+viens/i.test(contenu)) {
-    return ville ? `Tu habites à ${ville}, c'est bien ça ?` : "Tu veux bien me dire ta ville ?";
-  }
-
-  if (/comment\s+je\s+m'appelle|mon\s+prenom/i.test(contenu)) {
-    return prenom ? `Tu t'appelles ${prenom}, je n’oublie rien 😘` : "Tu ne m’as pas encore dit ton prenom...";
-  }
-
-  // Mood HOT → générer réponse complète
-  if (mood === "hot") {
-    return genererPhraseComplete("explicite", memory.ia.posture);
-  }
-
-  // Sinon teasing avec prenom si dispo
-  const phrase = genererPhraseSimple(ton);
-  return prenom ? `${prenom}, ${phrase}` : phrase;
+  return "Je te découvre encore, continue...";
 }
+
+
 
 
 sendButton.onclick = () => {
