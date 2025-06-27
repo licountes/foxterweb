@@ -41,19 +41,7 @@ function updateMood() {
   else memory.ia.mood = "hot";
 }
 
-
-function updateMoodByInteraction() {
-  const count = memory.ia.historique.length;
-  if (count >= 600) memory.ia.mood = "hot";
-  else if (count >= 400) memory.ia.mood = "coquine";
-  else if (count >= 250) memory.ia.mood = "complice";
-  else if (count >= 50) memory.ia.mood = "amicale";
-  else if (count >= 10) memory.ia.mood = "neutre";
-  else memory.ia.mood = "surprise";
-}
-
 function summarizeMemory() {
-
   if (memory.ia.historique.length > 200) {
     memory.ia.historique = memory.ia.historique.slice(-100);
   }
@@ -266,19 +254,25 @@ function generateResponse(input) {
   const ville = memory.user.ville;
   const contenu = input.toLowerCase();
 
+  // Réponses contextuelles selon mots-clés
   if (/comment tu t'appelles|ton nom/i.test(contenu)) return "Je m'appelle Camille 😘";
   if (/quel age/i.test(contenu)) return age ? `Tu m'as dit que tu avais ${age} ans 😉` : "Tu ne me l'as pas encore dit 😇";
   if (/où tu habites|d'où viens/i.test(contenu)) return ville ? `Tu habites à ${ville}, c'est bien ça ?` : "Tu veux bien me dire ta ville ?";
   if (/comment je m'appelle|mon prenom/i.test(contenu)) return prenom ? `Tu t'appelles ${prenom}, je n’oublie rien 😘` : "Tu ne m’as pas encore dit ton prénom...";
+  if (/salut|coucou|bonjour/i.test(contenu)) return "Oh... Je ne m’attendais pas à te voir 😯";
+  if (/ça va|tu vas bien/i.test(contenu)) return "Oui, et toi ? 😊";
+  if (/merci/i.test(contenu)) return "Avec plaisir 😘";
+  if (/je m'appelle|je suis/i.test(contenu)) return "Enchantée, je suis ravie de te connaître.";
 
+  // Sinon, réponse par mood
   if (mood === "hot") return genererPhraseComplete("explicite", memory.ia.posture);
   if (mood === "coquine") return genererPhraseComplete("teasing", memory.ia.posture);
   if (mood === "complice") return "Tu me fais sourire sans même essayer 😏";
-  if (mood === "amicale") return "C’est sympa de discuter avec toi 😊";
-  if (mood === "neutre") return "Tu veux discuter un peu ?";
-  if (mood === "surprise") return "Oh... Je ne m’attendais pas à te voir 😯";
+  if (mood === "amicale") return "C’est agréable d’apprendre à te connaître 😊";
+  if (mood === "neutre") return "Dis-m’en un peu plus sur toi.";
+  if (mood === "surprise") return "Tu m’étonnes déjà 😯";
 
-  return "Je te découvre encore, continue...";
+  return "Je t’écoute, raconte-moi.";
 }
 
 
