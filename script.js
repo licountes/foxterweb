@@ -265,8 +265,8 @@ function generateResponse(input) {
   if (/je m'appelle|je suis/i.test(contenu)) return "Enchantée, je suis ravie de te connaître.";
 
   // Sinon, réponse par mood
-  if (mood === "hot") return genererPhraseComplete("explicite", memory.ia.posture);
-  if (mood === "coquine") return genererPhraseComplete("teasing", memory.ia.posture);
+  if (mood === "hot" && memory.ia.historique.length >= 600) return genererPhraseComplete("explicite", memory.ia.posture);
+  if (mood === "coquine" && memory.ia.historique.length >= 400) return genererPhraseComplete("teasing", memory.ia.posture);
   if (mood === "complice") return "Tu me fais sourire sans même essayer 😏";
   if (mood === "amicale") return "C’est agréable d’apprendre à te connaître 😊";
   if (mood === "neutre") return "Dis-m’en un peu plus sur toi.";
