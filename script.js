@@ -283,6 +283,14 @@ sendButton.onclick = () => {
   const reply = generateResponse(prompt);
 
   memory.ia.historique.push({ user: prompt, camille: reply });
+
+  // ✅ Résumé automatique tous les 200 messages (SILENCIEUX)
+  if (memory.ia.historique.length >= 200) {
+    memory.ia.historique = memory.ia.historique.slice(-100); // garde les 100 derniers
+    memory.ia.affinité = Math.min(memory.ia.affinité + 1, 15);
+  }
+
+  // 🔒 Sauvegarde mémoire dans localStorage
   localStorage.setItem("camille_memory", JSON.stringify(memory));
 
   addMessage("🧑", prompt);
