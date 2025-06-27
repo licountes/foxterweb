@@ -79,7 +79,7 @@ function extractUserInfo(text) {
       .split(",")
       .map((x) => x.trim());
   }
-}
+
 
 function getRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
