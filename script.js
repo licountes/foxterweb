@@ -35,9 +35,9 @@ function addMessage(sender, message) {
 function updateMood() {
   const a = memory.ia.affinite;
   if (a < 3) memory.ia.mood = "neutre";
-  else if (a < 6) memory.ia.mood = "amicale";
-  else if (a < 9) memory.ia.mood = "complice";
-  else if (a < 12) memory.ia.mood = "coquine";
+  else if (a < 50) memory.ia.mood = "amicale";
+  else if (a < 250) memory.ia.mood = "complice";
+  else if (a < 300) memory.ia.mood = "coquine";
   else memory.ia.mood = "hot";
 }
 
