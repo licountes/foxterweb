@@ -31,23 +31,21 @@ function summarizeMemory() {
 }
 
 function extractUserInfo(text) {
-  const regex = {
-    prénom: /je m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i,
-    âge: /j'ai\s+(\d{1,2})\s+ans/i,
-    ville: /j'habite\s+à\s+([A-Za-zÀ-ÿ\-]+)/i,
-    passions: /j'aime\s+(.+?)(\.|$)/i
-  };
-  for (const [key, re] of Object.entries(regex)) {
-    const match = text.match(re);
-    if (match) {
-      if (key === "passions") {
-        memory.user[key] = match[1].split(",").map(x => x.trim());
-      } else {
-        memory.user[key] = match[1];
-      }
-    }
+  const prénomMatch = text.match(/m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
+  const âgeMatch = text.match(/j'ai\s+(\d{1,2})\s+ans/i);
+  const villeMatch = text.match(/j'habite\s+(à\s+)?([A-Za-zÀ-ÿ\-]+)/i);
+  const passionsMatch = text.match(/j'aime\s+(.+?)(\.|$)/i);
+
+  if (prénomMatch) memory.user.prénom = prénomMatch[1];
+  if (âgeMatch) memory.user.âge = âgeMatch[1];
+  if (villeMatch) memory.user.ville = villeMatch[2] || villeMatch[1];
+  if (passionsMatch) {
+    memory.user.passions = passionsMatch[1]
+      .split(",")
+      .map((x) => x.trim());
   }
 }
+
 
 function getRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
