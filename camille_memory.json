@@ -1,0 +1,16 @@
+{
+  "user": {
+    "prénom": null,
+    "âge": null,
+    "ville": null,
+    "passions": []
+  },
+  "ia": {
+    "mood": "neutre",
+    "affinité": 0,
+    "historique": []
+  }
+}
+
+
+
