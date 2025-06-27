@@ -22,6 +22,15 @@ if (memory) {
     camilleProfile: {}
   };
   addMessage("👩 Camille", "Oh… Salut 😯 Je ne m’attendais pas à ce message… Tu es qui ?");
+
+// ✅ Réaffichage des derniers messages à l'ouverture (max 50)
+const historiqueTotal = memory.ia.historique || [];
+const dernierBloc = historiqueTotal.slice(-50);
+dernierBloc.forEach(entry => {
+  if (entry.user) addMessage("🧑", entry.user);
+  if (entry.camille) addMessage("👩 Camille", entry.camille);
+});
+
 }
 
 
@@ -41,10 +50,16 @@ function updateMood() {
   else memory.ia.mood = "hot";
 }
 
+
+
 function summarizeMemory() {
   if (memory.ia.historique.length > 200) {
     memory.ia.historique = memory.ia.historique.slice(-100);
   }
+}
+
+}
+
 }
 
 function extractUserInfo(text) {
