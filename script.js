@@ -238,18 +238,38 @@ function generateResponse(input) {
   const ton = detecteTon(input);
   const mood = memory.ia.mood;
   const prenom = memory.user.prénom;
+  const age = memory.user.âge;
+  const ville = memory.user.ville;
 
-  // Réponse personnalisée à des questions précises
-  if (/quel\s+âge/i.test(input)) return memory.user.âge ? `Tu as ${memory.user.âge} ans 😉` : "Tu ne me l’as pas encore dit 😇";
-  if (/tu\s+(t'appelles|t appelle|es qui)/i.test(input)) return "Je m'appelle Camille, tu le sais 😏";
-  if (/où\s+(tu\s+habites|es)/i.test(input)) return memory.user.ville ? `J’habite à ${memory.user.ville}` : "Je préfère garder ça pour moi 😇";
+  const contenu = input.toLowerCase();
 
-  // Réponse hot si mood = hot
-  if (mood === "hot") return genererPhraseComplete("explicite", memory.ia.posture);
+  // Réponses personnalisées
+  if (/comment\s+tu\s+t'appelles|ton\s+nom/i.test(contenu)) {
+    return "Je m'appelle Camille 😘";
+  }
 
-  // Sinon, réponse teasing simple
-  return genererPhraseSimple(ton);
+  if (/quel\s+âge/i.test(contenu)) {
+    return age ? `Tu m'as dit que tu avais ${age} ans 😉` : "Tu ne me l'as pas encore dit 😇";
+  }
+
+  if (/où\s+tu\s+habites|d'où\s+viens/i.test(contenu)) {
+    return ville ? `Tu habites à ${ville}, c'est bien ça ?` : "Tu veux bien me dire ta ville ?";
+  }
+
+  if (/comment\s+je\s+m'appelle|mon\s+prénom/i.test(contenu)) {
+    return prenom ? `Tu t'appelles ${prenom}, je n’oublie rien 😘` : "Tu ne m’as pas encore dit ton prénom...";
+  }
+
+  // Mood HOT → générer réponse complète
+  if (mood === "hot") {
+    return genererPhraseComplete("explicite", memory.ia.posture);
+  }
+
+  // Sinon teasing avec prénom si dispo
+  const phrase = genererPhraseSimple(ton);
+  return prenom ? `${prenom}, ${phrase}` : phrase;
 }
+
 
 sendButton.onclick = () => {
   const prompt = userInput.value.trim();
