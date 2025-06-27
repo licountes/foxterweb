@@ -52,7 +52,6 @@ function updateMood() {
 function summarizeMemory() {
   if (memory.ia.historique.length > 200) {
     memory.ia.historique = memory.ia.historique.slice(-100);
-  }
 }
 function extractUserInfo(text) {
   const prenomMatch = text.match(/m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
