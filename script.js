@@ -1,3 +1,6 @@
+// ✅ SCRIPT CAMILLE FINAL - FUSION COMPLÈTE BASE SEB + CORRECTIFS
+// Mémoire, JSON, Mood, Résumé auto, Langage Hot
+
 const chatWindow = document.getElementById("chat-window");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
