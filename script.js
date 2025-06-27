@@ -1,6 +1,3 @@
-const API_URL = "/api/chat";
-const IMAGE_URL = "/api/image";
-
 const chatWindow = document.getElementById("chat-window");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
@@ -38,10 +35,10 @@ function extractUserInfo(text) {
     prénom: /je m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i,
     âge: /j'ai\s+(\d{1,2})\s+ans/i,
     ville: /j'habite\s+à\s+([A-Za-zÀ-ÿ\-]+)/i,
-    passions: /j'aime\s+(.+?)(\\.|$)/i
+    passions: /j'aime\s+(.+?)(\.|$)/i
   };
   for (const [key, re] of Object.entries(regex)) {
-    const match = text.match(new RegExp(re));
+    const match = text.match(re);
     if (match) {
       if (key === "passions") {
         memory.user[key] = match[1].split(",").map(x => x.trim());
@@ -52,51 +49,46 @@ function extractUserInfo(text) {
   }
 }
 
-sendButton.onclick = async () => {
+function generateFakeResponse(input) {
+  const mood = memory.ia.mood;
+  if (mood === "neutre") return "Salut 😊 Tu veux discuter ?";
+  if (mood === "amicale") return "Haha t'es marrant toi 😄";
+  if (mood === "complice") return "Tu me fais trop sourire 😘";
+  if (mood === "coquine") return "Tu me chauffes un peu là 😏";
+  if (mood === "hot") {
+    const phrases = [
+      "Je mouille rien qu'à t'imaginer 😈",
+      "J’ai envie de toi fort là tout de suite...",
+      "Tu veux que je te montre ce que je porte ? 💋"
+    ];
+    return phrases[Math.floor(Math.random() * phrases.length)];
+  }
+  return "Hmm ?";
+}
+
+sendButton.onclick = () => {
   const text = userInput.value.trim();
   if (!text) return;
 
   addMessage("🧑", text);
   userInput.value = "";
   memory.ia.historique.push({ role: "user", content: text });
+
   extractUserInfo(text);
   memory.ia.affinité += 0.3;
   updateMood();
   summarizeMemory();
 
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: text, memory })
-  });
-
-  const data = await response.json();
-  if (data.reply) {
-    memory.ia.historique.push({ role: "assistant", content: data.reply });
-    localStorage.setItem("camille_memory", JSON.stringify(memory));
-    addMessage("👩 Camille", data.reply);
-  } else {
-    addMessage("👩 Camille", "❌ Erreur de réponse.");
-  }
+  const reply = generateFakeResponse(text);
+  memory.ia.historique.push({ role: "assistant", content: reply });
+  localStorage.setItem("camille_memory", JSON.stringify(memory));
+  addMessage("👩 Camille", reply);
 };
 
-imageButton.onclick = async () => {
-  const response = await fetch(IMAGE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ memory })
-  });
-
-  const data = await response.json();
-  if (data.image_url) {
-    const img = document.createElement("img");
-    img.src = data.image_url;
-    img.style.maxWidth = "100%";
-    chatWindow.appendChild(img);
-  } else {
-    addMessage("👩 Camille", "❌ Impossible de générer l'image.");
-  }
+imageButton.onclick = () => {
+  const img = document.createElement("img");
+  img.src = "https://i.imgur.com/4Wl2noO.jpeg";
+  img.style.maxWidth = "100%";
+  chatWindow.appendChild(img);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
 };
-
-
-
