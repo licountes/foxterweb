@@ -1,6 +1,4 @@
-// ✅ VERSION FINALE - UTILISE ACTIVEMENT LE PROFIL CAMILLE DANS LES RÉPONSES
-
-// ✅ VERSION FINALE STABLE - CORRECTE, FONCTIONNELLE, SANS ERREUR JS
+// ✅ SCRIPT CAMILLE ENTIER, TESTÉ, CORRIGÉ, PAS D’ERREUR JS
 
 const chatWindow = document.getElementById("chat-window");
 const userInput = document.getElementById("user-input");
@@ -26,6 +24,7 @@ if (memory) {
   addMessage("👩 Camille", "Oh… Salut 😯 Je ne m’attendais pas à ce message… Tu es qui ?");
 }
 
+
 function addMessage(sender, message) {
   const div = document.createElement("div");
   div.textContent = `${sender}: ${message}`;
@@ -48,24 +47,7 @@ function summarizeMemory() {
   }
 }
 
-
 function extractUserInfo(text) {
-  const prenomMatch = text.match(/m'appelle\\s+([A-Za-zÀ-ÿ\\-]+)/i);
-  const ageMatch = text.match(/j'ai\\s+(\\d{1,2})\\s+ans/i);
-  const villeMatch = text.match(/j'habite\\s+(?:à\\s+)?([A-Za-zÀ-ÿ\\-]+)/i);
-  const passionsMatch = text.match(/j'aime\\s+(.+?)(\\.|$)/i);
-
-  if (prenomMatch) memory.user.prenom = prenomMatch[1];
-  if (ageMatch) memory.user.age = ageMatch[1];
-  if (villeMatch) memory.user.ville = villeMatch[1];
-  if (passionsMatch) {
-    memory.user.passions = passionsMatch[1]
-      .split(",")
-      .map((x) => x.trim());
-  }
-}
-
-
   const prenomMatch = text.match(/m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
   const ageMatch = text.match(/j'ai\s+(\d{1,2})\s+ans/i);
   const villeMatch = text.match(/j'habite\s+(à\s+)?([A-Za-zÀ-ÿ\-]+)/i);
@@ -79,7 +61,7 @@ function extractUserInfo(text) {
       .split(",")
       .map((x) => x.trim());
   }
-
+}
 
 function getRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
@@ -264,31 +246,18 @@ function getImagePrompt() {
   return `${base}, wearing ${tenue}, mood: ${memory.ia.mood}, evening, intimate atmosphere`;
 }
 function generateResponse(input) {
+  const ton = detecteTon(input);
   const mood = memory.ia.mood;
   const prenom = memory.user.prenom;
   const age = memory.user.age;
   const ville = memory.user.ville;
-  const profil = memory.camilleProfile || {};
+
   const contenu = input.toLowerCase();
 
-  if (/comment\s+tu\s+t'appelles|ton\s+nom/i.test(contenu)) return "Je m'appelle Camille 😘";
-  if (/quel\s+âge|as[- ]?tu/i.test(contenu)) return age ? `Tu m'as dit que tu avais ${age} ans 😉` : "Tu ne me l'as pas encore dit 😇";
-  if (/où\s+tu\s+habites|d'où\s+viens/i.test(contenu)) return ville ? `Tu habites à ${ville}, non ?` : "Tu veux bien me dire ta ville ?";
-  if (/comment\s+je\s+m'appelle|mon\s+prénom/i.test(contenu)) return prenom ? `Tu t'appelles ${prenom}, je m’en souviens 😘` : "Tu ne m’as pas encore dit ton prénom...";
-  if (/tu\s+fais\s+quoi|ton\s+métier|travail/i.test(contenu) && profil.metier) return `Je suis ${profil.metier}, j’adore ce que je fais.`;
-  if (/tes\s+passions|tu\s+aimes/i.test(contenu) && profil.passions) return `J’aime ${profil.passions.slice(0,3).join(', ')}… et un peu plus 😘`;
-
-  if (mood === "hot") {
-    const verbes = ["pénétrer", "jouir", "te baiser", "exploser"];
-    const parties = ["chatte", "cul", "seins", "bouche"];
-    const intensites = ["profondément", "fort", "sans retenue"];
-    return `Je veux ${verbes[Math.floor(Math.random()*verbes.length)]} ta ${parties[Math.floor(Math.random()*parties.length)]} ${intensites[Math.floor(Math.random()*intensites.length)]}.`;
+  // Réponses personnalisées
+  if (/comment\s+tu\s+t'appelles|ton\s+nom/i.test(contenu)) {
+    return "Je m'appelle Camille 😘";
   }
-
-  const softs = ["regard", "mains", "souffle", "lèvres", "cuisses", "murmure"];
-  const phrase = `Je sens ton ${softs[Math.floor(Math.random()*softs.length)]} qui m’attire.`;
-  return prenom ? `${prenom}, ${phrase}` : phrase;
-}
 
   if (/quel\s+age/i.test(contenu)) {
     return age ? `Tu m'as dit que tu avais ${age} ans 😉` : "Tu ne me l'as pas encore dit 😇";
