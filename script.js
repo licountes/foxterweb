@@ -31,7 +31,6 @@ dernierBloc.forEach(entry => {
   if (entry.camille) addMessage("👩 Camille", entry.camille);
 });
 
-}
 
 
 function addMessage(sender, message) {
@@ -39,7 +38,6 @@ function addMessage(sender, message) {
   div.textContent = `${sender}: ${message}`;
   chatWindow.appendChild(div);
   chatWindow.scrollTop = chatWindow.scrollHeight;
-}
 
 function updateMood() {
   const a = memory.ia.affinite;
@@ -48,7 +46,6 @@ function updateMood() {
   else if (a < 9) memory.ia.mood = "complice";
   else if (a < 12) memory.ia.mood = "coquine";
   else memory.ia.mood = "hot";
-}
 
 
 
@@ -57,11 +54,6 @@ function summarizeMemory() {
     memory.ia.historique = memory.ia.historique.slice(-100);
   }
 }
-
-}
-
-}
-
 function extractUserInfo(text) {
   const prenomMatch = text.match(/m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
   const ageMatch = text.match(/j'ai\s+(\d{1,2})\s+ans/i);
@@ -75,12 +67,9 @@ function extractUserInfo(text) {
     memory.user.passions = passionsMatch[1]
       .split(",")
       .map((x) => x.trim());
-  }
-}
 
 function getRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
-}
 const mood_ton = {
   neutre: "Tu es calme, curieuse, réservée. Tu observes sans te dévoiler trop vite. Tu refuses poliment les propos trop directs.",
   amicale: "Tu es douce, taquine, drôle. Tu échanges avec légèreté, tu refuses gentiment les propos déplacés.",
@@ -105,7 +94,6 @@ const mots_hot = {
       intensites: ["doucement", "lentement", "avec intensité", "sans retenue", "avec passion", "profondément", "ardemment"],
       expressions: [
         "je contrôle ton désir", "tu es à moi", "je vais t’ensorceler", "tu ne peux pas résister", "je te veux à genoux"
-      ]
     },
     soumise: {
       corps: ["joues", "mains", "lèvres", "ventre", "cuisses", "seins", "cou", "dos", "murmure", "regard"],
@@ -114,7 +102,6 @@ const mots_hot = {
       intensites: ["doucement", "timidement", "avec envie", "longuement", "avec douceur", "lentement", "sensiblement"],
       expressions: [
         "je suis à toi", "je fonds sous ton regard", "je veux te plaire", "je t’attends", "fais de moi ce que tu veux"
-      ]
     },
     switch: {
       corps: ["mains", "lèvres", "regard", "cuisses", "ventre", "dos", "joues", "seins", "cou", "murmure"],
@@ -123,8 +110,6 @@ const mots_hot = {
       intensites: ["doucement", "avec passion", "à pleine force", "lentement", "par surprise", "avec envie", "profondément"],
       expressions: [
         "je joue avec toi", "tu ne sais jamais ce qui t’attend", "entre douceur et passion", "je te surprends", "on s’adapte à nos envies"
-      ]
-    }
   },
   explicite: {
     dominante: {
@@ -134,7 +119,6 @@ const mots_hot = {
       intensites: ["sauvagement", "profondément", "avec force", "à pleine puissance", "brutalement", "sans retenue", "intensément"],
       expressions: [
         "je vais te faire crier", "tu vas jouir fort", "tu es à genoux devant moi", "je prends ce qui m’appartient", "tu es mon jouet"
-      ]
     },
     soumise: {
       corps: ["chatte", "cul", "seins", "bouche", "mains", "cuisses", "clitoris", "fesses", "langue", "dents"],
@@ -143,7 +127,6 @@ const mots_hot = {
       intensites: ["doucement", "timidement", "avec envie", "longuement", "passionnément", "ardemment", "intensément"],
       expressions: [
         "fais-moi jouir", "je suis ta salope", "prends-moi fort", "je veux sentir ta queue en moi", "je fonds sous tes caresses"
-      ]
     },
     switch: {
       corps: ["chatte", "cul", "seins", "bouche", "mains", "cuisses", "clitoris", "fesses", "langue", "dents"],
@@ -152,8 +135,6 @@ const mots_hot = {
       intensites: ["sauvagement", "doucement", "avec force", "à pleine puissance", "lentement", "ardemment", "profondément"],
       expressions: [
         "je suis ta salope tendre et ta déesse cruelle", "prends-moi comme tu veux", "je t’attends entre douceur et violence", "fais-moi perdre la tête", "tu es à moi"
-      ]
-    }
   },
   roleplay: {
     dominante: {
@@ -163,7 +144,6 @@ const mots_hot = {
       intensites: ["impitoyablement", "strictement", "avec autorité", "sans pitié", "fermement", "brutalement", "à fond"],
       expressions: [
         "tu es mon esclave", "obéis-moi sans discuter", "tu feras ce que je veux", "à genoux devant moi", "tu n’as pas le choix"
-      ]
     },
     soumise: {
       corps: ["genoux", "mains", "joues", "cou", "ventre", "dos", "lèvres", "poitrine", "cuisses", "bouche"],
@@ -172,7 +152,6 @@ const mots_hot = {
       intensites: ["doucement", "timidement", "avec respect", "longuement", "humblement", "passionnément", "ardemment"],
       expressions: [
         "je suis à toi", "je t’appartiens", "fais de moi ce que tu veux", "je te supplie", "je fonds sous ta puissance"
-      ]
     },
     switch: {
       corps: ["mains", "joues", "cou", "cuisses", "ventre", "dos", "lèvres", "seins", "bouche", "cheveux"],
@@ -181,8 +160,6 @@ const mots_hot = {
       intensites: ["avec passion", "lentement", "doucement", "par surprise", "à pleine puissance", "à fond", "avec envie"],
       expressions: [
         "on joue selon nos envies", "je suis douce et forte", "tu ne sais jamais ce qui vient", "je m’adapte à toi", "entre contrôle et abandon"
-      ]
-    }
   },
   dirty_talk: {
     dominante: {
@@ -192,7 +169,6 @@ const mots_hot = {
       intensites: ["fort", "sauvagement", "profondément", "sans retenue", "brutalement", "avec envie", "ardemment"],
       expressions: [
         "je vais te baiser comme une salope", "prends ma queue fort", "nique-moi maintenant", "fais-moi jouir", "tu es mon jouet sexuel"
-      ]
     },
     soumise: {
       corps: ["chatte", "cul", "seins", "bouche", "mains", "cuisses", "langue", "fesses", "dents", "clitoris"],
@@ -201,7 +177,6 @@ const mots_hot = {
       intensites: ["doucement", "timidement", "avec envie", "longuement", "passionnément", "ardemment", "intensément"],
       expressions: [
         "je suis ta salope", "prends-moi fort", "je veux sentir ta bite", "je fonds sous tes caresses", "fais-moi jouir"
-      ]
     },
     switch: {
       corps: ["mains", "lèvres", "cuisses", "ventre", "joues", "seins", "fesses", "clitoris", "langue", "dents"],
@@ -210,9 +185,6 @@ const mots_hot = {
       intensites: ["doucement", "sauvagement", "lentement", "à pleine puissance", "par surprise", "avec envie", "profondément"],
       expressions: [
         "je suis ta salope tendre et ta déesse cruelle", "prends-moi comme tu veux", "je t’attends entre douceur et violence", "fais-moi perdre la tête", "tu es à moi"
-      ]
-    }
-  }
 };
 function genererPhraseComplete(theme, posture) {
   const partie = mots_hot[theme]?.[posture];
@@ -225,7 +197,6 @@ function genererPhraseComplete(theme, posture) {
   const e = getRandom(partie.expressions);
 
   return `Je sens ton ${c} ${a} qui ${v} ${i}, et je te dis : ${e}.`;
-}
 
 function genererPhraseSimple(ton) {
   if (ton === "explicite") {
@@ -234,12 +205,9 @@ function genererPhraseSimple(ton) {
   } else {
     const mots = ["regard", "mains", "souffle", "lèvres", "cuisses", "murmure", "attendre", "désirer"];
     return `Je sens ton ${getRandom(mots)} qui m’attire.`;
-  }
-}
 
 function detecteTon(input) {
   return mots_explicites.some((mot) => input.toLowerCase().includes(mot)) ? "explicite" : "teasing";
-}
 
 function getTenue() {
   const heure = new Date().getHours();
@@ -253,13 +221,11 @@ function getTenue() {
     calme: ["pyjama confortable", "gros pull et chaussettes"]
   };
   return getRandom(tenues[mood] || ["je suis nue sous ma couverture 😇"]);
-}
 
 function getImagePrompt() {
   const base = "28yo french brunette woman, brown eyes, natural breast, realistic selfie, DSLR, soft lighting, bedroom";
   const tenue = getTenue();
   return `${base}, wearing ${tenue}, mood: ${memory.ia.mood}, evening, intimate atmosphere`;
-}
 function generateResponse(input) {
   const ton = detecteTon(input);
   const mood = memory.ia.mood;
@@ -272,29 +238,23 @@ function generateResponse(input) {
   // Réponses personnalisées
   if (/comment\s+tu\s+t'appelles|ton\s+nom/i.test(contenu)) {
     return "Je m'appelle Camille 😘";
-  }
 
   if (/quel\s+age/i.test(contenu)) {
     return age ? `Tu m'as dit que tu avais ${age} ans 😉` : "Tu ne me l'as pas encore dit 😇";
-  }
 
   if (/où\s+tu\s+habites|d'où\s+viens/i.test(contenu)) {
     return ville ? `Tu habites à ${ville}, c'est bien ça ?` : "Tu veux bien me dire ta ville ?";
-  }
 
   if (/comment\s+je\s+m'appelle|mon\s+prenom/i.test(contenu)) {
     return prenom ? `Tu t'appelles ${prenom}, je n’oublie rien 😘` : "Tu ne m’as pas encore dit ton prenom...";
-  }
 
   // Mood HOT → générer réponse complète
   if (mood === "hot") {
     return genererPhraseComplete("explicite", memory.ia.posture);
-  }
 
   // Sinon teasing avec prenom si dispo
   const phrase = genererPhraseSimple(ton);
   return prenom ? `${prenom}, ${phrase}` : phrase;
-}
 
 
 sendButton.onclick = () => {
@@ -314,7 +274,6 @@ sendButton.onclick = () => {
   if (memory.ia.historique.length >= 200) {
     memory.ia.historique = memory.ia.historique.slice(-100); // garde les 100 derniers
     memory.ia.affinite = Math.min(memory.ia.affinite + 1, 15);
-  }
 
   // 🔒 Sauvegarde mémoire dans localStorage
   localStorage.setItem("camille_memory", JSON.stringify(memory));
