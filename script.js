@@ -35,13 +35,25 @@ function addMessage(sender, message) {
 function updateMood() {
   const a = memory.ia.affinite;
   if (a < 3) memory.ia.mood = "neutre";
-  else if (a < 50) memory.ia.mood = "amicale";
-  else if (a < 250) memory.ia.mood = "complice";
-  else if (a < 300) memory.ia.mood = "coquine";
+  else if (a < 6) memory.ia.mood = "amicale";
+  else if (a < 9) memory.ia.mood = "complice";
+  else if (a < 12) memory.ia.mood = "coquine";
   else memory.ia.mood = "hot";
 }
 
+
+function updateMoodByInteraction() {
+  const count = memory.ia.historique.length;
+  if (count >= 600) memory.ia.mood = "hot";
+  else if (count >= 400) memory.ia.mood = "coquine";
+  else if (count >= 250) memory.ia.mood = "complice";
+  else if (count >= 50) memory.ia.mood = "amicale";
+  else if (count >= 10) memory.ia.mood = "neutre";
+  else memory.ia.mood = "surprise";
+}
+
 function summarizeMemory() {
+
   if (memory.ia.historique.length > 200) {
     memory.ia.historique = memory.ia.historique.slice(-100);
   }
@@ -254,13 +266,11 @@ function generateResponse(input) {
   const ville = memory.user.ville;
   const contenu = input.toLowerCase();
 
-  // Réponses personnalisées
   if (/comment tu t'appelles|ton nom/i.test(contenu)) return "Je m'appelle Camille 😘";
   if (/quel age/i.test(contenu)) return age ? `Tu m'as dit que tu avais ${age} ans 😉` : "Tu ne me l'as pas encore dit 😇";
   if (/où tu habites|d'où viens/i.test(contenu)) return ville ? `Tu habites à ${ville}, c'est bien ça ?` : "Tu veux bien me dire ta ville ?";
   if (/comment je m'appelle|mon prenom/i.test(contenu)) return prenom ? `Tu t'appelles ${prenom}, je n’oublie rien 😘` : "Tu ne m’as pas encore dit ton prénom...";
 
-  // Réponses en fonction du mood
   if (mood === "hot") return genererPhraseComplete("explicite", memory.ia.posture);
   if (mood === "coquine") return genererPhraseComplete("teasing", memory.ia.posture);
   if (mood === "complice") return "Tu me fais sourire sans même essayer 😏";
@@ -308,48 +318,3 @@ imageButton.onclick = () => {
   const prompt = getImagePrompt();
   addMessage("👩 Camille", phrase + "\n(image simulée sur prompt : " + prompt + ")");
 };
-
-// 📁 Fonction : exporter la mémoire en fichier .json
-function exportMemoryToFile() {
-  const blob = new Blob([JSON.stringify(memory, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "camille_memory.json";
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// 📁 Fonction : importer la mémoire depuis un fichier camille_memory.json
-function loadMemoryFromFile(file) {
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      memory = JSON.parse(reader.result);
-      localStorage.setItem("camille_memory", JSON.stringify(memory));
-      alert("Mémoire rechargée avec succès !");
-      location.reload();
-    } catch (e) {
-      alert("Erreur lors du chargement du fichier.");
-    }
-  };
-  reader.readAsText(file);
-}
-
-// ✅ Ajout des boutons dans la page automatiquement
-const exportBtn = document.createElement("button");
-exportBtn.textContent = "💾 Sauver mémoire";
-exportBtn.onclick = exportMemoryToFile;
-document.body.appendChild(exportBtn);
-
-const importInput = document.createElement("input");
-importInput.type = "file";
-importInput.style.display = "none";
-importInput.accept = ".json";
-importInput.onchange = () => loadMemoryFromFile(importInput.files[0]);
-document.body.appendChild(importInput);
-
-const importBtn = document.createElement("button");
-importBtn.textContent = "📂 Charger mémoire";
-importBtn.onclick = () => importInput.click();
-document.body.appendChild(importBtn);
