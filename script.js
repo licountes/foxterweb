@@ -258,7 +258,7 @@ function buildImagePrompt({ nsfw = false, mood, tenue, lieu }) {
 }
 
 // --------- GÉNÉRATION D'IMAGE VIA STABLE HORDE ---------
-const STABLE_HORDE_API_KEY = "xM_Gw-VoJl2MVzHWto30JA";
+const STABLE_HORDE_API_KEY = "SIGt4AVTBIfqUald-o3s0A";
 async function hordeGenerateImage(prompt, nsfw = false) {
   // 1. Demande l'image
   const payload = {
