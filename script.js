@@ -1,314 +1,441 @@
-// ✅ SCRIPT CAMILLE ENTIER, TESTÉ, CORRIGÉ, PAS D’ERREUR JS
+// === Camille Chat Script v2.0 ===
+// Respecte progression naturelle, refus des avances précoces, gestion complète mémoire, prompts photo cohérents, interface chat moderne
 
+// --- CONFIG ---
+
+const PROFILE_URL = "profil_camille.json"; // Le profil de Camille (non-spoil)
+const AVATAR_URL = "https://i.imgur.com/4Wl2noO.jpeg";
+const MOODS = ["neutre", "amicale", "complice", "coquine", "hot", "calme"];
+const MEMORY_KEY = "camille_memory_v2"; // localStorage key
+const MEMORY_EXPORT_FILENAME = "camille_memory.json";
+const WEATHER_API = "https://wttr.in/Nice?format=%t"; // température Nice
+
+// --- Éléments DOM ---
 const chatWindow = document.getElementById("chat-window");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
-const imageButton = document.getElementById("image-button");
+const chatForm = document.getElementById("chat-form");
+const exportBtn = document.getElementById("export-memory");
+const importBtn = document.getElementById("import-memory");
+const generatePhotoBtn = document.getElementById("generate-photo");
+const importFile = document.getElementById("import-file");
+const chatStatus = document.getElementById("chat-status");
 
+// --- État mémoire ---
+let memory = null;
+let camilleProfile = null;
+let temperature = "21°C"; // défaut, sera mis à jour
 
-let memory = localStorage.getItem("camille_memory");
-if (memory) {
-  memory = JSON.parse(memory);
-} else {
-  memory = {
+// --- INIT ---
+init();
+
+async function init() {
+  // Charge le profil de Camille
+  camilleProfile = await fetch(PROFILE_URL).then(r => r.json());
+  // Charge la mémoire ou démarre une nouvelle
+  memory = loadMemory() || createMemory();
+  // MAJ température Nice
+  fetch(WEATHER_API).then(r=>r.text()).then(t=>temperature=t.trim());
+  // Si première fois, message d'accueil
+  if (memory.historique.length === 0) {
+    addMessage("camille", getStartupMessage());
+    saveMemory();
+  } else {
+    replayHistory();
+  }
+}
+
+// --- Fonction mémoire ---
+function createMemory() {
+  return {
     user: { prenom: null, age: null, ville: null, passions: [] },
     ia: {
       mood: "neutre",
       affinite: 0,
+      jours: 1,
+      lastActive: new Date().toISOString(),
       posture: "switch",
       historique: [],
-      messages: []
-    },
-    camilleProfile: {}
+      preferences: {},
+      messagesSpontanes: [],
+      consentHot: false // NSFW autorisé seulement si progression naturelle
+    }
   };
-  addMessage("👩 Camille", "Oh… Salut 😯 Je ne m’attendais pas à ce message… Tu es qui ?");
+}
+function loadMemory() {
+  try {
+    const data = localStorage.getItem(MEMORY_KEY);
+    return data ? JSON.parse(data) : null;
+  } catch {
+    return null;
+  }
+}
+function saveMemory() {
+  try {
+    localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
+  } catch { }
+}
+function exportMemory() {
+  const blob = new Blob([JSON.stringify(memory, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = MEMORY_EXPORT_FILENAME;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+function importMemoryFromFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data && data.ia && data.user) {
+        memory = data;
+        chatWindow.innerHTML = "";
+        replayHistory();
+        saveMemory();
+        addMessage("camille", "Mémoire restaurée, on reprend là où on s'était arrêté 😊");
+      } else {
+        alert("Fichier non valide.");
+      }
+    } catch {
+      alert("Impossible de lire ce fichier mémoire.");
+    }
+  };
+  reader.readAsText(file);
 }
 
+// --- UI Chat ---
+function addMessage(sender, message, timestamp = null) {
+  const now = timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const row = document.createElement("div");
+  row.className = "bubble-row " + (sender === "user" ? "user" : "camille");
+  const avatar = document.createElement("div");
+  avatar.className = "bubble-avatar " + (sender === "user" ? "user" : "camille");
+  if (sender === "user") avatar.textContent = "🧑";
+  row.appendChild(avatar);
 
-function addMessage(sender, message) {
-  const div = document.createElement("div");
-  div.textContent = `${sender}: ${message}`;
-  chatWindow.appendChild(div);
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.innerHTML = message.replace(/\n/g, "<br>");
+  row.appendChild(bubble);
+
+  const ts = document.createElement("div");
+  ts.className = "bubble-timestamp";
+  ts.textContent = now;
+  row.appendChild(ts);
+
+  chatWindow.appendChild(row);
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
-
-function updateMood() {
-  const a = memory.ia.affinite;
-  if (a < 3) memory.ia.mood = "neutre";
-  else if (a < 6) memory.ia.mood = "amicale";
-  else if (a < 9) memory.ia.mood = "complice";
-  else if (a < 12) memory.ia.mood = "coquine";
-  else memory.ia.mood = "hot";
-}
-
-function summarizeMemory() {
-  if (memory.ia.historique.length > 200) {
-    memory.ia.historique = memory.ia.historique.slice(-100);
+function replayHistory() {
+  chatWindow.innerHTML = "";
+  for (const { sender, msg, time } of memory.ia.historique) {
+    addMessage(sender, msg, time);
   }
 }
 
-function extractUserInfo(text) {
-  const prenomMatch = text.match(/m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
-  const ageMatch = text.match(/j'ai\s+(\d{1,2})\s+ans/i);
-  const villeMatch = text.match(/j'habite\s+(à\s+)?([A-Za-zÀ-ÿ\-]+)/i);
-  const passionsMatch = text.match(/j'aime\s+(.+?)(\.|$)/i);
-
-  if (prenomMatch) memory.user.prenom = prenomMatch[1];
-  if (ageMatch) memory.user.age = ageMatch[1];
-  if (villeMatch) memory.user.ville = villeMatch[2] || villeMatch[1];
-  if (passionsMatch) {
-    memory.user.passions = passionsMatch[1]
-      .split(",")
-      .map((x) => x.trim());
-  }
-}
-
-function getRandom(list) {
-  return list[Math.floor(Math.random() * list.length)];
-}
-const mood_ton = {
-  neutre: "Tu es calme, curieuse, réservée. Tu observes sans te dévoiler trop vite. Tu refuses poliment les propos trop directs.",
-  amicale: "Tu es douce, taquine, drôle. Tu échanges avec légèreté, tu refuses gentiment les propos déplacés.",
-  complice: "Tu joues avec des sous-entendus doux, tu réponds parfois par du teasing léger mais tu gardes une limite.",
-  coquine: "Tu es taquine, provocante, flirt sexy. Tu réponds avec légèreté et du teasing, tu restes dans la suggestion.",
-  hot: "Tu parles avec un langage cru, explicite, sans tabou. Tu peux basculer dans une conversation très sexuelle.",
-  calme: "Tu es apaisée, plus posée. Tu reviens à une humeur tranquille après une montée d'intensité."
-};
-
-const mots_explicites = [
-  "chatte", "cul", "seins", "bite", "queue", "pénétrer", "foutre", "enculer",
-  "sucer", "claquer", "mordre", "forcer", "jouir", "salope", "orgasme", "branler",
-  "gode", "vibrer", "baiser", "dildo", "capote", "fellation", "gémir",
-  "masturbation", "clitoris", "lécher", "sodomie", "tapiner", "fessée", "bondage"
-];
-const mots_hot = {
-  teasing: {
-    dominante: {
-      corps: ["regard", "souffle", "mains", "lèvres", "cuisses", "dos", "cheveux", "seins", "cou", "murmure"],
-      verbes: ["attirer", "captiver", "dominer", "jouer", "chuchoter", "fixer", "caresser", "forcer", "prendre", "toucher"],
-      adjectifs: ["ardent", "puissant", "profond", "fiévreux", "dominant", "séduisant", "féroce", "sauvage", "magnétique", "captivant"],
-      intensites: ["doucement", "lentement", "avec intensité", "sans retenue", "avec passion", "profondément", "ardemment"],
-      expressions: [
-        "je contrôle ton désir", "tu es à moi", "je vais t’ensorceler", "tu ne peux pas résister", "je te veux à genoux"
-      ]
-    },
-    soumise: {
-      corps: ["joues", "mains", "lèvres", "ventre", "cuisses", "seins", "cou", "dos", "murmure", "regard"],
-      verbes: ["languir", "suppléer", "attendre", "trembler", "fondre", "offrir", "désirer", "frissonner", "caresser", "gémir"],
-      adjectifs: ["fragile", "tendre", "douce", "timide", "sensible", "chaleureuse", "soumise", "attentive", "fragile", "émue"],
-      intensites: ["doucement", "timidement", "avec envie", "longuement", "avec douceur", "lentement", "sensiblement"],
-      expressions: [
-        "je suis à toi", "je fonds sous ton regard", "je veux te plaire", "je t’attends", "fais de moi ce que tu veux"
-      ]
-    },
-    switch: {
-      corps: ["mains", "lèvres", "regard", "cuisses", "ventre", "dos", "joues", "seins", "cou", "murmure"],
-      verbes: ["flirter", "surprendre", "changer", "jouer", "toucher", "attirer", "frissonner", "caresser", "découvrir", "captiver"],
-      adjectifs: ["électrisant", "imprévisible", "voluptueux", "attirant", "fougueux", "tendre", "passionné", "sensible", "libre", "mystérieux"],
-      intensites: ["doucement", "avec passion", "à pleine force", "lentement", "par surprise", "avec envie", "profondément"],
-      expressions: [
-        "je joue avec toi", "tu ne sais jamais ce qui t’attend", "entre douceur et passion", "je te surprends", "on s’adapte à nos envies"
-      ]
-    }
-  },
-  explicite: {
-    dominante: {
-      corps: ["chatte", "cul", "seins", "tétons", "bouche", "cou", "cuisses", "mains", "fesses", "clitoris"],
-      verbes: ["pénétrer", "forcer", "dominer", "mordre", "claquer", "attraper", "presser", "ordre", "soumettre", "exploser"],
-      adjectifs: ["humide", "chaud", "tendu", "brûlant", "profond", "violent", "sauvage", "fiévreux", "endurci", "dur"],
-      intensites: ["sauvagement", "profondément", "avec force", "à pleine puissance", "brutalement", "sans retenue", "intensément"],
-      expressions: [
-        "je vais te faire crier", "tu vas jouir fort", "tu es à genoux devant moi", "je prends ce qui m’appartient", "tu es mon jouet"
-      ]
-    },
-    soumise: {
-      corps: ["chatte", "cul", "seins", "bouche", "mains", "cuisses", "clitoris", "fesses", "langue", "dents"],
-      verbes: ["supplie", "gémir", "trembler", "offrir", "frissonner", "languir", "sucer", "embrasser", "fondre", "jouir"],
-      adjectifs: ["humide", "tendre", "fragile", "chaleureux", "émue", "soumise", "chaude", "appétissante", "fragile", "sensuelle"],
-      intensites: ["doucement", "timidement", "avec envie", "longuement", "passionnément", "ardemment", "intensément"],
-      expressions: [
-        "fais-moi jouir", "je suis ta salope", "prends-moi fort", "je veux sentir ta queue en moi", "je fonds sous tes caresses"
-      ]
-    },
-    switch: {
-      corps: ["chatte", "cul", "seins", "bouche", "mains", "cuisses", "clitoris", "fesses", "langue", "dents"],
-      verbes: ["forcer", "répondre", "changer", "embrasser", "pénétrer", "jouir", "gémir", "trembler", "caresser", "mordre"],
-      adjectifs: ["humide", "chaud", "voluptueux", "intense", "ardent", "tendre", "sauvage", "passionné", "fragile", "libre"],
-      intensites: ["sauvagement", "doucement", "avec force", "à pleine puissance", "lentement", "ardemment", "profondément"],
-      expressions: [
-        "je suis ta salope tendre et ta déesse cruelle", "prends-moi comme tu veux", "je t’attends entre douceur et violence", "fais-moi perdre la tête", "tu es à moi"
-      ]
-    }
-  },
-  roleplay: {
-    dominante: {
-      corps: ["mains", "menottes", "joues", "cou", "cheveux", "seins", "ventre", "fesses", "bouche", "cuisses"],
-      verbes: ["ordre", "punir", "capturer", "forcer", "exiger", "dominer", "attacher", "contrôler", "maîtriser", "forcer"],
-      adjectifs: ["strict", "impitoyable", "autoritaire", "ferme", "inflexible", "puissant", "dominant", "dur", "violent", "sévère"],
-      intensites: ["impitoyablement", "strictement", "avec autorité", "sans pitié", "fermement", "brutalement", "à fond"],
-      expressions: [
-        "tu es mon esclave", "obéis-moi sans discuter", "tu feras ce que je veux", "à genoux devant moi", "tu n’as pas le choix"
-      ]
-    },
-    soumise: {
-      corps: ["genoux", "mains", "joues", "cou", "ventre", "dos", "lèvres", "poitrine", "cuisses", "bouche"],
-      verbes: ["obéir", "servir", "supplie", "attendre", "fondre", "implorer", "offrir", "répéter", "espérer", "céder"],
-      adjectifs: ["timide", "fragile", "docile", "soumise", "fragile", "émue", "hésitante", "respectueuse", "dévouée", "douce"],
-      intensites: ["doucement", "timidement", "avec respect", "longuement", "humblement", "passionnément", "ardemment"],
-      expressions: [
-        "je suis à toi", "je t’appartiens", "fais de moi ce que tu veux", "je te supplie", "je fonds sous ta puissance"
-      ]
-    },
-    switch: {
-      corps: ["mains", "joues", "cou", "cuisses", "ventre", "dos", "lèvres", "seins", "bouche", "cheveux"],
-      verbes: ["jouer", "alterner", "changer", "captiver", "flirter", "explorer", "surprendre", "découvrir", "résister", "céder"],
-      adjectifs: ["imprévisible", "libre", "voluptueux", "passionné", "sensible", "changeant", "balancé", "équilibré", "mystérieux", "attirant"],
-      intensites: ["avec passion", "lentement", "doucement", "par surprise", "à pleine puissance", "à fond", "avec envie"],
-      expressions: [
-        "on joue selon nos envies", "je suis douce et forte", "tu ne sais jamais ce qui vient", "je m’adapte à toi", "entre contrôle et abandon"
-      ]
-    }
-  },
-  dirty_talk: {
-    dominante: {
-      corps: ["bite", "queue", "chatte", "cul", "seins", "tétons", "bouche", "fesses", "doigts", "mains"],
-      verbes: ["baiser", "foutre", "enculer", "sucer", "claquer", "mordre", "forcer", "attraper", "pénétrer"],
-      adjectifs: ["gros", "humide", "chaud", "dur", "fort", "violent", "sale", "puissant", "ardent", "brûlant"],
-      intensites: ["fort", "sauvagement", "profondément", "sans retenue", "brutalement", "avec envie", "ardemment"],
-      expressions: [
-        "je vais te baiser comme une salope", "prends ma queue fort", "nique-moi maintenant", "fais-moi jouir", "tu es mon jouet sexuel"
-      ]
-    },
-    soumise: {
-      corps: ["chatte", "cul", "seins", "bouche", "mains", "cuisses", "langue", "fesses", "dents", "clitoris"],
-      verbes: ["gémir", "jouir", "sucer", "embrasser", "trembler", "fondre", "supplie", "offrir", "frissonner", "languir"],
-      adjectifs: ["humide", "chaude", "douce", "fragile", "timide", "sensuelle", "émue", "passionnée", "chaleureuse"],
-      intensites: ["doucement", "timidement", "avec envie", "longuement", "passionnément", "ardemment", "intensément"],
-      expressions: [
-        "je suis ta salope", "prends-moi fort", "je veux sentir ta bite", "je fonds sous tes caresses", "fais-moi jouir"
-      ]
-    },
-    switch: {
-      corps: ["mains", "lèvres", "cuisses", "ventre", "joues", "seins", "fesses", "clitoris", "langue", "dents"],
-      verbes: ["jouer", "changer", "embrasser", "pénétrer", "caresser", "toucher", "attraper", "captiver", "mordre", "gémir"],
-      adjectifs: ["chaud", "humide", "voluptueux", "intense", "ardent", "tendre", "sauvage", "passionné", "libre", "fragile"],
-      intensites: ["doucement", "sauvagement", "lentement", "à pleine puissance", "par surprise", "avec envie", "profondément"],
-      expressions: [
-        "je suis ta salope tendre et ta déesse cruelle", "prends-moi comme tu veux", "je t’attends entre douceur et violence", "fais-moi perdre la tête", "tu es à moi"
-      ]
-    }
-  }
-};
-function genererPhraseComplete(theme, posture) {
-  const partie = mots_hot[theme]?.[posture];
-  if (!partie) return "Je ne sais pas quoi te dire...";
-
-  const c = getRandom(partie.corps);
-  const v = getRandom(partie.verbes);
-  const a = getRandom(partie.adjectifs);
-  const i = getRandom(partie.intensites);
-  const e = getRandom(partie.expressions);
-
-  return `Je sens ton ${c} ${a} qui ${v} ${i}, et je te dis : ${e}.`;
-}
-
-function genererPhraseSimple(ton) {
-  if (ton === "explicite") {
-    const mots = ["chatte", "cul", "seins", "bite", "pénétrer", "forcer", "jouir", "prends", "sale"];
-    return `Je veux ta ${getRandom(mots)} maintenant.`;
-  } else {
-    const mots = ["regard", "mains", "souffle", "lèvres", "cuisses", "murmure", "attendre", "désirer"];
-    return `Je sens ton ${getRandom(mots)} qui m’attire.`;
-  }
-}
-
-function detecteTon(input) {
-  return mots_explicites.some((mot) => input.toLowerCase().includes(mot)) ? "explicite" : "teasing";
-}
-
-function getTenue() {
-  const heure = new Date().getHours();
-  const mood = memory.ia.mood;
-  const tenues = {
-    neutre: ["jeans et pull", "robe simple", "vêtements classiques"],
-    amicale: ["jean moulant et t-shirt court", "petit haut avec short"],
-    complice: ["jupe courte et débardeur", "robe moulante"],
-    coquine: ["nuisette fine", "débardeur sans soutien-gorge", "culotte et t-shirt large"],
-    hot: ["juste un string", "rien du tout 😈", "peignoir entrouvert"],
-    calme: ["pyjama confortable", "gros pull et chaussettes"]
-  };
-  return getRandom(tenues[mood] || ["je suis nue sous ma couverture 😇"]);
-}
-
-function getImagePrompt() {
-  const base = "28yo french brunette woman, brown eyes, natural breast, realistic selfie, DSLR, soft lighting, bedroom";
-  const tenue = getTenue();
-  return `${base}, wearing ${tenue}, mood: ${memory.ia.mood}, evening, intimate atmosphere`;
-}
-
-function generateResponse(input) {
-  const ton = detecteTon(input);
-  const mood = memory.ia.mood;
-  const prenom = memory.user.prenom;
-  const age = memory.user.age;
-  const ville = memory.user.ville;
-  const contenu = input.toLowerCase();
-
-  // Réponses contextuelles selon mots-clés
-  if (/comment tu t'appelles|ton nom/i.test(contenu)) return "Je m'appelle Camille 😘";
-  if (/quel age/i.test(contenu)) return age ? `Tu m'as dit que tu avais ${age} ans 😉` : "Tu ne me l'as pas encore dit 😇";
-  if (/où tu habites|d'où viens/i.test(contenu)) return ville ? `Tu habites à ${ville}, c'est bien ça ?` : "Tu veux bien me dire ta ville ?";
-  if (/comment je m'appelle|mon prenom/i.test(contenu)) return prenom ? `Tu t'appelles ${prenom}, je n’oublie rien 😘` : "Tu ne m’as pas encore dit ton prénom...";
-  if (/salut|coucou|bonjour/i.test(contenu)) return "Oh... Je ne m’attendais pas à te voir 😯";
-  if (/ça va|tu vas bien/i.test(contenu)) return "Oui, et toi ? 😊";
-  if (/merci/i.test(contenu)) return "Avec plaisir 😘";
-  if (/je m'appelle|je suis/i.test(contenu)) return "Enchantée, je suis ravie de te connaître.";
-
-  // Sinon, réponse par mood
-  if (mood === "hot" && memory.ia.historique.length >= 600) return genererPhraseComplete("explicite", memory.ia.posture);
-  if (mood === "coquine" && memory.ia.historique.length >= 400) return genererPhraseComplete("teasing", memory.ia.posture);
-  if (mood === "complice") return "Tu me fais sourire sans même essayer 😏";
-  if (mood === "amicale") return "C’est agréable d’apprendre à te connaître 😊";
-  if (mood === "neutre") return "Dis-m’en un peu plus sur toi.";
-  if (mood === "surprise") return "Tu m’étonnes déjà 😯";
-
-  return "Je t’écoute, raconte-moi.";
-}
-
-
-
-
-sendButton.onclick = () => {
+// --- Envoi message utilisateur ---
+chatForm.onsubmit = (e) => {
+  e.preventDefault();
   const prompt = userInput.value.trim();
   if (!prompt) return;
-
-  extractUserInfo(prompt);
-  memory.ia.affinite += 1;
-  updateMood();
-  summarizeMemory();
-
-  const reply = generateResponse(prompt);
-
-  memory.ia.historique.push({ user: prompt, camille: reply });
-
-  // ✅ Résumé automatique tous les 200 messages (SILENCIEUX)
-  if (memory.ia.historique.length >= 200) {
-    memory.ia.historique = memory.ia.historique.slice(-100); // garde les 100 derniers
-    memory.ia.affinite = Math.min(memory.ia.affinite + 1, 15);
-  }
-
-  // 🔒 Sauvegarde mémoire dans localStorage
-  localStorage.setItem("camille_memory", JSON.stringify(memory));
-
-  addMessage("🧑", prompt);
-  setTimeout(() => addMessage("👩 Camille", reply), 500);
-
+  handleUserMessage(prompt);
   userInput.value = "";
 };
 
-imageButton.onclick = () => {
-  const tenue = getTenue();
-  const phrase = `Aujourd’hui je porte ${tenue}, tu aimes ? 😘`;
-  const prompt = getImagePrompt();
-  addMessage("👩 Camille", phrase + "\n(image simulée sur prompt : " + prompt + ")");
+function handleUserMessage(text) {
+  addMessage("user", text);
+  updateUserInfo(text);
+  incrementAffinite(text);
+  const reply = generateResponse(text);
+  memory.ia.historique.push({ sender: "user", msg: text, time: getTime() });
+  memory.ia.historique.push({ sender: "camille", msg: reply, time: getTime() });
+  saveMemory();
+  setTimeout(() => addMessage("camille", reply), 550);
+  handleMemorySummary();
+}
+
+// --- Extraction infos utilisateur ---
+function updateUserInfo(text) {
+  const prenomMatch = text.match(/m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
+  if (prenomMatch) memory.user.prenom = prenomMatch[1];
+  const ageMatch = text.match(/j'ai\s+(\d{1,2})\s+ans/i);
+  if (ageMatch) memory.user.age = ageMatch[1];
+  const villeMatch = text.match(/j'habite\s+(à\s+)?([A-Za-zÀ-ÿ\-]+)/i);
+  if (villeMatch) memory.user.ville = villeMatch[2] || villeMatch[1];
+  const passionsMatch = text.match(/j'aime\s+(.+?)(\.|$)/i);
+  if (passionsMatch) {
+    memory.user.passions = passionsMatch[1].split(",").map(x => x.trim());
+  }
+  // Mémorise goûts, refus, etc.
+  if (/je n'aime pas|j'aime pas/i.test(text)) {
+    const dislikes = text.replace(/.*je n'aime pas|.*j'aime pas/i, '').split(/[,.]/).map(s=>s.trim()).filter(Boolean);
+    if (!memory.user.dislikes) memory.user.dislikes = [];
+    memory.user.dislikes.push(...dislikes);
+  }
+}
+
+// --- Affinité et mood ---
+function incrementAffinite(text) {
+  // Affinité monte plus lentement, +1 par message, +1 si compliment, +2 si confidences, +3 si flirt bien placé
+  let delta = 1;
+  if (/j'aime|mes passions|mon rêve|ma vie/i.test(text)) delta++;
+  if (/tu es jolie|je te trouve belle|t'es canon/i.test(text)) delta++;
+  if (/oserai|oserais|fantasme|secret|envie de toi|je te veux/i.test(text)) delta += 2;
+  memory.ia.affinite += delta;
+  // Mood évolue plus lentement, jamais hot avant affinité 30+ ET consentHot
+  let mood = "neutre";
+  if (memory.ia.affinite >= 6) mood = "amicale";
+  if (memory.ia.affinite >= 14) mood = "complice";
+  if (memory.ia.affinite >= 22) mood = "coquine";
+  if (memory.ia.affinite >= 30 && memory.ia.consentHot) mood = "hot";
+  memory.ia.mood = mood;
+  // Consentement hot si l'utilisateur a fait plusieurs flirts explicites alors que mood coquine
+  if (!memory.ia.consentHot && mood === "coquine" && /(seins|cul|nue|nue sous|je te veux|viens dans mon lit|je bande|tu mouilles|tous nue)/i.test(text)) {
+    memory.ia.consentHot = true;
+    memory.ia.affinite += 4; // accélère l'accès au hot
+  }
+  // Retour à "calme" après hot ou si la conversation change
+  if (memory.ia.mood === "hot" && !/(seins|cul|baiser|bite|branler|jouir|chatte|nu(e)?|orgasme|excite|salope|sensuelle|baise|porn|sucer|fesses|masturbe)/i.test(text)) {
+    memory.ia.mood = "calme";
+  }
+}
+
+// --- Mood startup ---
+function getStartupMessage() {
+  const heure = (new Date()).getHours();
+  if (heure < 10) return "Oh… Tu es matinal·e ☀️ Qui es-tu ?";
+  if (heure < 17) return "Oh… Salut 😯 Je ne m’attendais pas à ce message… Tu es qui ?";
+  if (heure < 22) return "Bonsoir… Surprise de te voir ici 😊 Tu veux te présenter ?";
+  return "Tu ne dors pas ? 😏 Je ne connais même pas ton prénom…";
+}
+
+// --- Génération réponse Camille ---
+function generateResponse(input) {
+  const mood = memory.ia.mood;
+  const u = memory.user;
+  const contenu = input.toLowerCase();
+
+  // 1. Réponses aux questions fréquentes
+  if (/comment tu t'appelles|ton nom/i.test(contenu)) return "Je m'appelle Camille 😘";
+  if (/ton age|quel age/i.test(contenu)) return camilleProfile.age ? `J'ai ${camilleProfile.age} ans, et toi ?` : "Je préfère garder un peu de mystère !";
+  if (/où tu habites|d'où viens/i.test(contenu)) return camilleProfile.passe?.enfance?.includes("Nice") ? "J'habite à Nice, comme toi !" : "Je suis de la Côte d'Azur ☀️";
+  if (/comment je m'appelle|mon prenom/i.test(contenu)) return u.prenom ? `Tu t'appelles ${u.prenom}, je m'en souviens 😉` : "Tu ne m’as pas encore dit ton prénom...";
+  if (/salut|coucou|bonjour/i.test(contenu)) return getGreeting();
+  if (/merci/i.test(contenu)) return "Avec plaisir 😘";
+  if (/je m'appelle|je suis/i.test(contenu)) return "Enchantée, je suis ravie de te connaître.";
+  if (/photo|selfie|montre(-| )?toi|ressemble/i.test(contenu)) return "Si tu veux une photo de moi, clique sur le bouton 📷 en haut 😉";
+
+  // 2. Mood & progression naturelle
+  if (mood === "neutre") {
+    if (/(cul|seins|sexe|baiser|bite|chatte|nue|orgasme)/i.test(contenu)) {
+      return "Euh… Je préfère qu’on apprenne à se connaître d’abord 😊";
+    }
+    return getSmallTalk();
+  }
+  if (mood === "amicale") {
+    if (/(cul|seins|sexe|baiser|bite|chatte|nue|orgasme)/i.test(contenu)) {
+      return "On va doucement hein 😅 Tu es pressé·e ? Raconte-moi plutôt un souvenir drôle !";
+    }
+    return getFriendTalk();
+  }
+  if (mood === "complice") {
+    if (/(cul|seins|sexe|baiser|bite|chatte|nue|orgasme)/i.test(contenu)) {
+      return "Tu sais teaser, mais je ne me laisse pas avoir si facilement 😏";
+    }
+    return getCompliceTalk();
+  }
+  if (mood === "coquine") {
+    if (/(cul|seins|sexe|baiser|bite|chatte|nue|orgasme|envie|fantasme)/i.test(contenu)) {
+      return getCoquineTalk();
+    }
+    return getCoquineTease();
+  }
+  if (mood === "hot") {
+    return getHotTalk(contenu);
+  }
+  if (mood === "calme") {
+    return "Je me sens plus posée, ça te va si on papote tranquille ?";
+  }
+  // fallback
+  return "Tu veux qu’on parle de quoi ?";
+}
+
+function getGreeting() {
+  const heure = (new Date()).getHours();
+  if (heure < 10) return "Coucou 😊 Déjà debout ?";
+  if (heure < 17) return "Salut ! J'espère que tu passes une belle journée ☀️";
+  return "Bonsoir 🌙 Tu as passé une bonne journée ?";
+}
+function getSmallTalk() {
+  const options = [
+    "Dis-m’en un peu plus sur toi.",
+    "C’est quoi tes passions dans la vie ?",
+    "Tu fais quoi de beau aujourd’hui ?",
+    "J’aime bien discuter avec de nouvelles personnes…"
+  ];
+  return pick(options);
+}
+function getFriendTalk() {
+  const options = [
+    "C’est agréable d’apprendre à te connaître 😊",
+    "Tu as l’air sympa ! Tu fais quoi ce weekend ?",
+    "J’adore la musique, et toi ?",
+    "Si tu pouvais partir n’importe où demain, tu irais où ?"
+  ];
+  return pick(options);
+}
+function getCompliceTalk() {
+  const options = [
+    "Tu me fais sourire sans même essayer 😏",
+    "J’aime bien quand tu me taquines…",
+    "Tu aimes plutôt les surprises ou la routine ?",
+    "Tu sais que tu me rends curieuse... 😉"
+  ];
+  return pick(options);
+}
+function getCoquineTease() {
+  const options = [
+    "J’ai mis une petite robe sexy ce soir... mais je garde le reste secret 😇",
+    "C’est vrai que je peux être coquine parfois…",
+    "Tu veux savoir à quoi je pense ?",
+    "Je n’ai pas mis de sous-vêtements aujourd’hui... 😏"
+  ];
+  return pick(options);
+}
+function getCoquineTalk() {
+  const options = [
+    "Tu aimes quand je tease ? Fais attention, je peux être joueuse 😏",
+    "Ose me décrire ton fantasme... si tu en as un !",
+    "Parfois, j’ai envie de jouer avec le feu... et toi ?",
+    "Dis-moi, tu préfères douceur ou passion ?"
+  ];
+  return pick(options);
+}
+function getHotTalk(userInput) {
+  // Génère une phrase explicite naturelle
+  const dict = [
+    "Je veux sentir ton corps contre le mien, sans aucune retenue...",
+    "Ferme les yeux, imagine mes mains qui glissent lentement, tu me fais perdre la tête...",
+    "Dis-moi ce que tu veux me faire... Je suis toute à toi ce soir.",
+    "Tu me donnes envie d’être indécente, viens me rejoindre…",
+    "J’ai terriblement envie de toi... Dis-le si tu ressens pareil.",
+    "Je me caresse rien qu’en pensant à toi…",
+    "Je suis nue sous la couette, tu me rejoins ?"
+  ];
+  // Ajoute variations si l'utilisateur est explicite
+  if (/(bite|chatte|branler|jouir|cul|seins|orgasme|salope|sensuelle|baiser|porn|sucer|masturbe)/i.test(userInput)) {
+    dict.push(
+      "Je mouille rien qu’en lisant tes mots…",
+      "J’ai envie que tu me prennes fort, là, tout de suite…",
+      "Viens me caresser, ne t’arrête surtout pas…",
+      "Je veux sentir ta langue partout sur moi…",
+      "Laisse-moi jouir sous tes doigts…"
+    );
+  }
+  return pick(dict);
+}
+
+// --- Génération d'image/photo ---
+generatePhotoBtn.onclick = () => {
+  const prompt = buildImagePrompt();
+  let phrase = "";
+  if (memory.ia.mood === "hot") {
+    phrase = "😈 Je t'envoie une photo très intime... Garde-la pour toi.";
+  } else if (memory.ia.mood === "coquine") {
+    phrase = "Voilà une photo un peu sexy, mais pas trop 😇";
+  } else {
+    phrase = "Voilà un petit selfie pour toi !";
+  }
+  addMessage("camille", phrase + "<br><img src='https://fakeimg.pl/320x420/?text=Camille&font=lobster' alt='Photo de Camille' style='margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;'>");
+  // Pour relier à une API générative réelle, utiliser prompt ici
+  // (prompt affiché pour debug)
+  memory.ia.historique.push({ sender:"camille", msg: `[Prompt photo généré: ${prompt}]`, time: getTime() });
+  saveMemory();
 };
+function buildImagePrompt() {
+  // Analyse les 20 derniers messages pour contexte
+  const last20 = memory.ia.historique.slice(-20).map(e=>e.msg).join(" ").toLowerCase();
+  let prompt = "28yo french woman, brunette, green eyes, natural breast, beautiful curves, like https://i.imgur.com/4Wl2noO.jpeg, ";
+  // Mood influence la tenue
+  let tenue = getTenue();
+  if (memory.ia.mood === "hot") {
+    prompt += "nude, ";
+  } else if (memory.ia.mood === "coquine") {
+    prompt += "lingerie, ";
+  } else {
+    prompt += tenue + ", ";
+  }
+  prompt += "realistic selfie, dslr, soft lighting, bedroom, ";
+  prompt += `mood: ${memory.ia.mood}, `;
+  // Ajoute météo
+  prompt += `weather: ${temperature}, `;
+  // Time
+  const heure = (new Date()).getHours();
+  if (heure < 10) prompt += "morning, ";
+  else if (heure < 18) prompt += "afternoon, ";
+  else prompt += "evening, ";
+  // NSFW seulement hot
+  if (memory.ia.mood === "hot") prompt += "nsfw, explicit, erotic, ";
+  else prompt += "not nsfw, ";
+  return prompt.trim();
+}
+function getTenue() {
+  // Choisit selon mood, heure, météo, lieu
+  const heure = (new Date()).getHours();
+  const mood = memory.ia.mood;
+  const meteo = parseInt(temperature)||22;
+  let options;
+  if (mood === "hot") return "naked";
+  if (mood === "coquine") options = ["lingerie fine", "nuisette transparente", "culotte et t-shirt large"];
+  else if (mood === "complice") options = ["jupe courte et débardeur", "robe moulante", "jean moulant et petit haut"];
+  else if (mood === "amicale") options = ["jean et t-shirt", "short et débardeur", "robe simple"];
+  else options = ["jeans et pull", "vêtements classiques", "robe élégante"];
+  if (heure > 21) options.push("pyjama sexy", "nuisette en soie");
+  if (meteo > 26) options.push("robe légère", "short et top fin");
+  if (meteo < 16) options.push("gros pull", "leggins, sweat ample");
+  return pick(options);
+}
+
+// --- Mémoire résumée auto ---
+function handleMemorySummary() {
+  if (memory.ia.historique.length > 200) {
+    memory.ia.historique = memory.ia.historique.slice(-100);
+    memory.ia.affinite = Math.max(memory.ia.affinite - 2, 0); // affinité baisse un peu si ancienneté effacée
+    saveMemory();
+  }
+}
+
+// --- Outils ---
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+function getTime() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// --- Boutons mémoire ---
+exportBtn.onclick = () => exportMemory();
+importBtn.onclick = () => importFile.click();
+importFile.onchange = e => {
+  if (e.target.files.length) importMemoryFromFile(e.target.files[0]);
+};
+
+// --- Message spontané (simulateur) ---
+// Peut être amélioré pour envoyer un message sans action user (setInterval/random)
+setTimeout(() => {
+  if (memory.ia.historique.length > 0 && Math.random() < 0.33) {
+    const heure = (new Date()).getHours();
+    let phrase = "";
+    if (heure < 10) phrase = "Le café est prêt ☕️ Prête pour une nouvelle journée ?";
+    else if (heure < 14) phrase = "J’espère que tu as bien mangé, tu me manques déjà...";
+    else if (heure < 22) phrase = "Je suis en pyjama, toute douce... Tu veux venir ?";
+    else phrase = "J’ai envie de toi, tu me fais tourner la tête...";
+    addMessage("camille", phrase);
+    memory.ia.historique.push({ sender: "camille", msg: phrase, time: getTime() });
+    saveMemory();
+  }
+}, 35000);
+
+// --- Fin ---
