@@ -529,21 +529,26 @@ function generateResponse(input) {
   memory.ia.lastCamilleMsg = phrase;
   return phrase;
 }
-  // --- Mini-jeu ou référence à souvenirs/anecdotes ---
-  if (u.prenom && Math.random() < 0.06 && mood !== "neutre") {
-    return randomFrom([
-      `Au fait, ${u.prenom}, pourquoi tu m’as écris la première fois ?`,
-      `${u.prenom}… je pensais justement à ce que tu m’as raconté sur ${u.ville ? u.ville : "ta vie"} !`,
-      `J’aime bien quand tu me parles de tes souvenirs, ça me rapproche de toi.`
-    ]);
+ // --- Mini-jeu ou référence à souvenirs/anecdotes ---
+if (u.prenom && Math.random() < 0.06 && mood !== "neutre") {
+  return randomFrom([
+    `Au fait, ${u.prenom}, pourquoi tu m’as écrit la première fois ?`, // corrigé "écris" -> "écrit"
+    `${u.prenom}… je pensais justement à ce que tu m’as raconté sur ${u.ville ? u.ville : "ta vie"} !`,
+    `J’aime bien quand tu me parles de tes souvenirs, ça me rapproche de toi.`
+  ]);
+}
+if (Array.isArray(u.anecdotes) && u.anecdotes.length > 0 && Math.random() < 0.08 && mood !== "neutre") {
+  const anecdote = randomFrom(u.anecdotes.filter(Boolean));
+  if (anecdote && anecdote.length > 4) {
+    return `Tu sais, ton anecdote "${anecdote}" m’a fait sourire !`;
   }
-  if (u.anecdotes && u.anecdotes.length > 0 && Math.random() < 0.08 && mood !== "neutre") {
-    return `Tu sais, ton anecdote "${randomFrom(u.anecdotes)}" m’a fait sourire !`;
+}
+if (Array.isArray(memory.ia.souvenirs) && memory.ia.souvenirs.length > 0 && Math.random() < 0.05 && mood !== "neutre") {
+  const souvenirsMsgs = memory.ia.souvenirs.map(s => s.msg).filter(Boolean);
+  if (souvenirsMsgs.length > 0) {
+    return `J’ai repensé à ça : "${randomFrom(souvenirsMsgs)}"`;
   }
-  if (memory.ia.souvenirs && memory.ia.souvenirs.length > 0 && Math.random() < 0.05 && mood !== "neutre") {
-    return `J’ai repensé à ça : "${randomFrom(memory.ia.souvenirs.map(s => s.msg))}"`;
-  }
-
+}
   // --- Camille "a une vie" : occupation, météo, tenue glissée naturellement ---
   let detailsVie = "";
   if (Math.random() < 0.26) {
