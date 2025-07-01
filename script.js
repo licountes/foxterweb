@@ -385,6 +385,42 @@ function generateResponse(input) {
   const msgCount = historique.filter(m => m.sender === "user").length;
   const contenu = input.toLowerCase();
 
+  // --- Détection prénom et réponse immédiate ---
+const prenomMatch = input.match(/je m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
+if (prenomMatch) {
+  const prenom = prenomMatch[1];
+  if (!u.prenom || u.prenom !== prenom) {
+    u.prenom = prenom;
+    saveMemory();
+    return `Enchantée ${prenom} 😊`;
+  } else {
+    return `Je sais déjà que tu t'appelles ${prenom} 😉`;
+  }
+}
+
+// --- Détection ville et réponse immédiate ---
+const villeMatch = input.match(/j'habite (à\s+)?([A-Za-zÀ-ÿ\-]+)/i);
+if (villeMatch) {
+  const ville = villeMatch[2];
+  if (!u.ville || u.ville !== ville) {
+    u.ville = ville;
+    saveMemory();
+    return `${ville}, c’est une belle ville ! Tu t’y plais ?`;
+  } else {
+    return `On en a déjà parlé, tu habites à ${ville} 😊`;
+  }
+}
+
+// --- Détection âge et réponse immédiate ---
+const ageMatch = input.match(/j'ai\s+(\d{1,2})\s+ans/i);
+if (ageMatch) {
+  const age = ageMatch[1];
+  if (!u.age || u.age !== age) {
+    u.age = age;
+    saveMemory();
+    return `Merci de me l’avoir dit ! Tu portes bien tes ${age} ans 😉`;
+  }
+}
   // --- Humeur aléatoire, se renouvelle toutes les 5 messages ---
   if (msgCount % 5 === 0) {
     const humeurs = ["normale","joyeuse","pensive","taquine","fatiguée"];
