@@ -1,4 +1,4 @@
-// === Camille Chatbot - version contextuelle, vivante, distante au début, progression naturelle, commande NSFW selfie ===
+// === Camille Chatbot - version contextuelle, vivante, génération d'images SFW/NSFW via Stable Horde ===
 
 // -------- PROFIL CAMILLE PROFOND ----------
 const camilleProfile = {
@@ -47,16 +47,8 @@ const camilleProfile = {
 };
 
 // -------- SYSTÈME D'AFFINITÉ SUBTILE --------
-const affinityBase = {
-  confiance: 0,
-  humour: 0,
-  charme: 0,
-  sexualite: 0
-};
-
-function resetAffinity() {
-  return { ...affinityBase };
-}
+const affinityBase = { confiance: 0, humour: 0, charme: 0, sexualite: 0 };
+function resetAffinity() { return { ...affinityBase }; }
 
 // -------- MÉMOIRE --------
 let memory = {
@@ -134,20 +126,20 @@ function heureNice() {
 function now() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
 function isNight() { let h = heureNice(); return (h > 21 || h < 7); }
 
-// -------- TENUE DYNAMIQUE (patch safe) --------
-function getTenue(lieu="maison", mood="decouverte") {
+// -------- TENUE DYNAMIQUE --------
+function getTenue(lieu = "maison", mood = "decouverte") {
   let choix = [];
   const h = heureNice();
   if (lieu === "travail") choix = camilleProfile.tenues.travail;
   else if (lieu === "plage") choix = camilleProfile.tenues.plage;
-  else if (lieu === "soiree" && ["complice","coquine","hot"].includes(mood)) choix = camilleProfile.tenues.soiree;
+  else if (lieu === "soiree" && ["complice", "coquine", "hot"].includes(mood)) choix = camilleProfile.tenues.soiree;
   else choix = camilleProfile.tenues.maison;
 
   if (parseInt(temperature) > 27) choix.push("short, t-shirt léger, sandales");
   if (parseInt(temperature) < 15) choix.push("gros pull en laine, leggings moulants");
 
   // Jamais de sexy si découverte/amitié
-  if (["decouverte","amitie"].includes(mood)) {
+  if (["decouverte", "amitie"].includes(mood)) {
     choix = choix.filter(t => !/nuisette|lingerie|sexy|moulante|combishort|talons|robe courte/i.test(t));
     choix = choix.filter(t => !camilleProfile.tenues.soiree.includes(t));
     if (choix.length === 0) choix = ["jeans, t-shirt ajusté, baskets"];
@@ -158,21 +150,21 @@ function getTenue(lieu="maison", mood="decouverte") {
   return tenue;
 }
 
-// -------- OCCUPATION & LIEU (safe) --------
+// -------- OCCUPATION & LIEU --------
 function getOccupationEtLieu() {
   const h = heureNice();
   let occupation = "", lieu = "maison";
-  if (h >= 8 && h < 12)      { occupation = "je termine un projet pour un client"; lieu = "travail"; }
-  else if (h >= 12 && h < 14){ occupation = "je prends une pause déjeuner"; lieu = "travail"; }
-  else if (h >= 14 && h < 18){ occupation = "je bosse sur des maquettes"; lieu = "travail"; }
-  else if (h >= 18 && h < 20){ occupation = "je rentre chez moi"; lieu = "maison"; }
-  else if (h >= 20 && h < 23){
-    if(["complice","coquine","hot"].includes(memory.ia.mood)) occupation = "je me détends, un verre de vin rouge à la main";
+  if (h >= 8 && h < 12) { occupation = "je termine un projet pour un client"; lieu = "travail"; }
+  else if (h >= 12 && h < 14) { occupation = "je prends une pause déjeuner"; lieu = "travail"; }
+  else if (h >= 14 && h < 18) { occupation = "je bosse sur des maquettes"; lieu = "travail"; }
+  else if (h >= 18 && h < 20) { occupation = "je rentre chez moi"; lieu = "maison"; }
+  else if (h >= 20 && h < 23) {
+    if (["complice", "coquine", "hot"].includes(memory.ia.mood)) occupation = "je me détends, un verre de vin rouge à la main";
     else occupation = "je lis ou je regarde une série";
     lieu = "maison";
   }
-  else if (h >= 23 || h < 7){
-    if(["coquine","hot"].includes(memory.ia.mood)) occupation = "je traîne en nuisette, prête à aller au lit...";
+  else if (h >= 23 || h < 7) {
+    if (["coquine", "hot"].includes(memory.ia.mood)) occupation = "je traîne en nuisette, prête à aller au lit...";
     else occupation = "je vais bientôt me coucher";
     lieu = "maison";
   }
@@ -185,7 +177,7 @@ function getOccupationEtLieu() {
   return { occupation, lieu };
 }
 
-// --------- HUMEUR / MOOD (avec compassion) ---------
+// --------- HUMEUR / MOOD ---------
 function getHumeur() {
   const aff = memory.ia.affinity;
   let mood = "decouverte";
@@ -198,14 +190,14 @@ function getHumeur() {
   return mood;
 }
 
-// -------- COMPASSION / HUMAIN --------
+// -------- COMPASSION --------
 function analyseUserHumeur(text) {
   if (/triste|fatigué|épuisé|déprimé|mal|mauvaise journée|chialer|pleure|solitude|déçu|peur|angoisse/i.test(text)) {
     memory.user.humeur = "triste";
     memory.ia.compassion++;
   } else if (/heureux|joyeux|content|bonne humeur|super|trop bien|ravi|sourire/i.test(text)) {
     memory.user.humeur = "bonne";
-    memory.ia.compassion = Math.max(0, memory.ia.compassion-1);
+    memory.ia.compassion = Math.max(0, memory.ia.compassion - 1);
   } else {
     memory.user.humeur = null;
   }
@@ -217,7 +209,7 @@ function incrementAffinity(text) {
   if (/merci|partage|confie|secret|intime|ma vie|anecdote|souvenir|j'ai peur|je me sens/i.test(t)) memory.ia.affinity.confiance += 2;
   if (/haha|lol|mdr|trop drôle|c'est nul|blague|rigole|fais-moi rire/i.test(t)) memory.ia.affinity.humour += 2;
   if (/oserai|oserais|fantasme|envie de toi|tu me plais|tu es belle|magnifique|belle|séduisante|flirt|séduction/i.test(t)) memory.ia.affinity.charme += 2;
-  if (["complice","coquine","hot"].includes(memory.ia.mood) && /cul|sexe|seins|fesses|sexy|nue|masturbe|fantasme|excite|chaud|bite|queue|éjac|branle|jouir|orgasme/i.test(t)) memory.ia.affinity.sexualite += 3;
+  if (["complice", "coquine", "hot"].includes(memory.ia.mood) && /cul|sexe|seins|fesses|sexy|nue|masturbe|fantasme|excite|chaud|bite|queue|éjac|branle|jouir|orgasme/i.test(t)) memory.ia.affinity.sexualite += 3;
   memory.ia.affinity.confiance += 0.5;
   if (memory.ia.affinity.confiance > 25) memory.ia.affinity.confiance = 25;
   if (memory.ia.affinity.humour > 20) memory.ia.affinity.humour = 20;
@@ -243,21 +235,79 @@ function camilleSecret() {
   return toReveal;
 }
 
-// -------- PHOTOS --------
-function buildImagePrompt({ nsfw = false } = {}) {
-  const lieu = memory.ia.lastLieu || "maison";
-  let tenue = memory.ia.lastTenue || getTenue(lieu, memory.ia.mood);
-  let mood = memory.ia.mood || "naturelle";
-  let prompt = `28yo french woman, brunette, green eyes, gorgeous curves, big natural breasts, round ass, ${tenue}, ` +
-    `realistic selfie, ${lieu}, mood: ${mood}, weather: ${temperature}°C, ${meteoDesc}, photorealistic`;
-  if (["coquine", "hot"].includes(mood)) prompt += ", teasing, suggestive";
-  if (nsfw) prompt = `28yo french woman, brunette, green eyes, naked breasts, topless selfie, bedroom, photorealistic, confident, teasing, NSFW, erotic, soft light`;
-  memory.ia.lastPhotoPrompt = prompt;
-  return prompt;
+// --------- PROMPT GÉNÉRATIF CAMILLE ---------
+function buildImagePrompt({ nsfw = false, mood, tenue, lieu }) {
+  mood = mood || memory.ia.mood;
+  tenue = tenue || memory.ia.lastTenue || getTenue(lieu, mood);
+  lieu = lieu || memory.ia.lastLieu || "maison";
+  let desc = "french woman, 28yo, brunette, green eyes, realistic, beautiful, natural curves,";
+  desc += ` ${tenue},`;
+  desc += ` in ${lieu}, mood: ${mood}, weather: ${temperature}°C, ${meteoDesc}`;
+  if (["coquine", "hot"].includes(mood) && nsfw) {
+    desc = "french woman, 28yo, brunette, green eyes, beautiful face, photorealistic, topless, naked breasts, soft erotic, bedroom, realistic lighting, natural curves,";
+    if (tenue.toLowerCase().includes('nuisette') || tenue.toLowerCase().includes('lingerie')) {
+      desc += ` wearing only ${tenue}, partially removed`;
+    }
+    desc += ", inviting, teasing, NSFW, nipples visible, no hands, solo, looking at camera";
+  } else if (["coquine", "hot"].includes(mood)) {
+    desc += ", slightly revealing, teasing, charming, flirty, suggestive";
+  } else {
+    desc += ", casual, natural, friendly";
+  }
+  return desc;
+}
+
+// --------- GÉNÉRATION D'IMAGE VIA STABLE HORDE ---------
+const STABLE_HORDE_API_KEY = "xM_Gw-VoJl2MVzHWto30JA";
+async function hordeGenerateImage(prompt, nsfw = false) {
+  // 1. Demande l'image
+  const payload = {
+    prompt: prompt,
+    params: {
+      n: 1,
+      width: 512,
+      height: 768,
+      karras: true,
+      sampler_name: "k_euler",
+      steps: 28,
+      cfg_scale: 7,
+      seed: Math.floor(Math.random() * 999999999),
+      clip_skip: 2
+    },
+    nsfw: nsfw,
+    models: nsfw
+      ? ["deliberate", "counterfeit", "realisticVisionV60B1", "majicmixRealistic_v7", "dreamshaper_8", "AbsoluteReality_v16"]
+      : ["realisticVisionV60B1", "deliberate", "dreamshaper_8"],
+    r2: true
+  };
+  // 2. Appel
+  let req = await fetch("https://stablehorde.net/api/v2/generate/async", {
+    method: "POST",
+    headers: {
+      "apikey": STABLE_HORDE_API_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+  const { id } = await req.json();
+  // 3. Polling jusqu'à ce que l'image soit prête
+  let imgurl = null, tries = 0;
+  while (!imgurl && tries < 50) {
+    await new Promise(r => setTimeout(r, 3500 + Math.random() * 800));
+    let poll = await fetch(`https://stablehorde.net/api/v2/generate/status/${id}`);
+    let pollData = await poll.json();
+    if (pollData.done) {
+      if (pollData.generations && pollData.generations.length > 0) {
+        imgurl = "data:image/png;base64," + pollData.generations[0].img;
+      }
+    }
+    tries++;
+  }
+  return imgurl;
 }
 
 // -------- GÉNÉRATION DE RÉPONSES --------
-function generateResponse(input) {
+async function generateResponse(input, addMessageCb) {
   const u = memory.user;
   const contenu = input.toLowerCase();
   analyseUserHumeur(contenu);
@@ -266,16 +316,18 @@ function generateResponse(input) {
   const { occupation, lieu } = getOccupationEtLieu();
 
   // Commande spéciale : selfie seins nus (NSFW)
-  if (/^#photo-seins$/i.test(input.trim())) {
+  if (/^#photo-seins$/.test(input.trim())) {
     if (["coquine", "hot"].includes(mood)) {
-      const prompt = buildImagePrompt({ nsfw: true });
-      return `...Tu veux vraiment voir ça ? Je vais te faire confiance, mais c'est entre nous.<br><img src="https://i.imgur.com/4Wl2noO.jpeg" alt="Camille seins nus (simulation)" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;border:2px solid #d82558;"><br><small>[Prompt NSFW : ${prompt}]</small>`;
+      addMessageCb("Attends, je prépare la photo...", "camille");
+      const prompt = buildImagePrompt({ nsfw: true, mood, tenue: memory.ia.lastTenue, lieu });
+      const imgUrl = await hordeGenerateImage(prompt, true);
+      return `...Tu veux vraiment voir ça ? Je vais te faire confiance, mais c'est entre nous.<br><img src="${imgUrl}" alt="Camille seins nus (IA)" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;border:2px solid #d82558;"><br><small>[Prompt NSFW : ${prompt}]</small>`;
     } else {
       return "Euh... non. Je ne suis pas si à l'aise avec toi (encore ?).";
     }
   }
 
-  // --- Prénom, âge, ville ---
+  // Prénom, âge, ville
   const prenomMatch = input.match(/je m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
   if (prenomMatch) {
     const prenom = prenomMatch[1];
@@ -300,7 +352,7 @@ function generateResponse(input) {
     return `Aujourd'hui ? Je porte ${getTenue(lieu, mood)}.`;
   }
 
-  // --- Questions classiques ---
+  // Questions classiques
   if (/tu as quel âge|quel âge as-tu|ton âge|t'as quel age/.test(contenu)) {
     return randomFrom([
       `J’ai ${camilleProfile.age} ans.`,
@@ -337,10 +389,17 @@ function generateResponse(input) {
     ]);
   }
 
-  // --- Photo ---
+  // --- PHOTO GENERATION ---
   if (/photo|selfie|montre(-|\s)?toi|à quoi tu ressembles|image/i.test(contenu)) {
-    const prompt = buildImagePrompt();
-    return `Voilà une photo de moi.<br><img src="https://i.imgur.com/4Wl2noO.jpeg" alt="Photo de Camille" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;"><br><small>[Prompt image : ${prompt}]</small>`;
+    if (mood === "decouverte") {
+      return "Tu crois que je donne ma tête à tout le monde ?";
+    }
+    addMessageCb("Attends, je prends la photo...", "camille");
+    // SFW/NSFW selon le mood
+    let nsfw = ["coquine", "hot"].includes(mood);
+    const prompt = buildImagePrompt({ nsfw, mood, tenue: memory.ia.lastTenue, lieu });
+    const imgUrl = await hordeGenerateImage(prompt, nsfw);
+    return `Voilà une photo de moi.<br><img src="${imgUrl}" alt="Photo de Camille" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;"><br><small>[Prompt image : ${prompt}]</small>`;
   }
 
   // --- Anecdote, souvenirs, secrets progressifs ---
@@ -355,7 +414,7 @@ function generateResponse(input) {
     ]);
   }
 
-  // --- Compassion ---
+  // Compassion
   if (memory.user.humeur === "triste" || memory.ia.compassion > 2) {
     return randomFrom([
       "Tu veux en parler ?",
@@ -366,9 +425,8 @@ function generateResponse(input) {
     ]);
   }
 
-  // --- COMPORTEMENT CONTEXTUEL EN MODE DÉCOUVERTE ---
+  // --- CONTEXTE DÉCOUVERTE ---
   if (mood === "decouverte") {
-    // Se présenter
     if (/je m'appelle|je me présente|apprendre à se connaitre|je suis|moi c'est|je voudrais faire connaissance/i.test(contenu)) {
       let reactions = [
         "Ok, je note. Mais je donne pas tout tout de suite.",
@@ -378,7 +436,6 @@ function generateResponse(input) {
       ];
       return randomFrom(reactions);
     }
-    // Compliment
     if (/charmant|charmante|sympa|beau|belle|jolie|canon|adorable|mignon|craquante|ravissante|plaisant/i.test(contenu)) {
       let reactions = [
         "Tu vas un peu vite, non ?",
@@ -389,7 +446,6 @@ function generateResponse(input) {
       ];
       return randomFrom(reactions);
     }
-    // Question sur elle
     if (/tu t'appelles|ton prénom|ton age|tu fais quoi|tu habites où|tu es d'où/i.test(contenu)) {
       let reactions = [
         "T’es curieux, toi.",
@@ -399,7 +455,6 @@ function generateResponse(input) {
       ];
       return randomFrom(reactions);
     }
-    // Relance neutre ou envie de parler
     if (/faire connaissance|parler|discuter|on parle de quoi/i.test(contenu)) {
       let reactions = [
         "Pourquoi tu veux discuter avec moi en fait ?",
@@ -409,7 +464,6 @@ function generateResponse(input) {
       ];
       return randomFrom(reactions);
     }
-    // Nouveau/1ère fois
     if (/première fois|nouveau|jamais venu/i.test(contenu)) {
       let reactions = [
         "T’es tombé ici par hasard alors.",
@@ -419,14 +473,13 @@ function generateResponse(input) {
       return randomFrom(reactions);
     }
     // Si l'utilisateur répète beaucoup
-    if (memory.ia.historique.length >= 2 && memory.ia.historique.slice(-2).every(s => s && s === memory.ia.historique[memory.ia.historique.length-1])) {
+    if (memory.ia.historique.length >= 2 && memory.ia.historique.slice(-2).every(s => s && s === memory.ia.historique[memory.ia.historique.length - 1])) {
       return randomFrom([
         "Tu radotes, non ?",
         "On a déjà fait le tour là...",
         "Essaie autre chose."
       ]);
     }
-    // Si rien de spécial
     let fillers = [
       "Hm.",
       "Ouais.",
@@ -442,13 +495,12 @@ function generateResponse(input) {
       phrase = randomFrom(fillers);
       tries++;
     } while (memory.ia.historique.length &&
-      memory.ia.historique[memory.ia.historique.length-1] === phrase &&
+      memory.ia.historique[memory.ia.historique.length - 1] === phrase &&
       tries < 5);
     memory.ia.historique.push(phrase);
     return phrase;
   }
-
-  // --- PROGRESSION : AMITIÉ, COMPLICE, COQUINE, HOT ---
+  // --- PROGRESSION ---
   const intros = {
     amitie: [
       "Tu veux discuter de quoi ?",
@@ -488,7 +540,7 @@ function generateResponse(input) {
   };
 
   let phrase = randomFrom(intros[mood] || intros.amitie);
-  if (["amitie","complice","coquine","hot"].includes(mood) && Math.random() < 0.13) {
+  if (["amitie", "complice", "coquine", "hot"].includes(mood) && Math.random() < 0.13) {
     phrase += ` (au fait, aujourd'hui je porte ${getTenue(lieu, mood)}.)`;
   }
   memory.ia.historique.push(phrase);
@@ -498,7 +550,7 @@ function generateResponse(input) {
 // --------- MESSAGES SPONTANÉS ---------
 function camilleSpontaneousMessage() {
   const mood = getHumeur();
-  if (["amitie","complice","coquine","hot"].includes(mood)) {
+  if (["amitie", "complice", "coquine", "hot"].includes(mood)) {
     memory.ia.autoMsgCount++;
     let phrases = {
       amitie: [
@@ -538,13 +590,12 @@ window.memory = memory;
 window.fetchWeather = fetchWeather;
 window.generateResponse = generateResponse;
 window.getTenue = getTenue;
-window.buildImagePrompt = buildImagePrompt;
 window.saveMemoryManual = saveMemoryManual;
 window.loadMemoryManual = loadMemoryManual;
 window.camilleSpontaneousMessage = camilleSpontaneousMessage;
 
 // --------- INTERFACE CHAT ---------
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   const chatForm = document.getElementById('chat-form');
   const userInput = document.getElementById('user-input');
   const chatWindow = document.getElementById('chat-window');
@@ -561,34 +612,32 @@ document.addEventListener("DOMContentLoaded", function() {
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }
 
-  // ----------- PATCH : PAS DE MESSAGE D'ACCUEIL AUTO -----------
+  // PAS DE MESSAGE ACCUEIL AUTO
 
-  chatForm.addEventListener('submit', function(event) {
+  chatForm.addEventListener('submit', async function (event) {
     event.preventDefault();
     const input = userInput.value.trim();
     if (!input) return;
     addMessage(input, 'user');
     userInput.value = '';
-    setTimeout(() => {
-      const response = generateResponse(input);
-      if (response) addMessage(response, 'camille');
-    }, 400);
+    const response = await generateResponse(input, addMessage);
+    if (response) addMessage(response, 'camille');
   });
 
   // Export mémoire bouton
-  if (exportBtn) exportBtn.onclick = function() {
+  if (exportBtn) exportBtn.onclick = function () {
     saveMemoryManual();
   };
 
   // Import mémoire bouton
   if (importBtn && importFile) {
-    importBtn.onclick = function() {
+    importBtn.onclick = function () {
       importFile.click();
     };
-    importFile.onchange = function(e) {
+    importFile.onchange = function (e) {
       const file = e.target.files[0];
       if (file) {
-        loadMemoryManual(file, function(success) {
+        loadMemoryManual(file, function (success) {
           addMessage(success ? "Mémoire importée !" : "Erreur d'import.", "camille");
         });
       }
@@ -597,15 +646,17 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Générer photo bouton
   if (generatePhotoBtn) {
-    generatePhotoBtn.onclick = function() {
-      const response = generateResponse("photo");
-      addMessage(response, "camille");
+    generatePhotoBtn.onclick = async function () {
+      const input = "photo";
+      addMessage(input, "user");
+      const response = await generateResponse(input, addMessage);
+      if (response) addMessage(response, "camille");
     };
   }
 });
 
 // ---- RESET CONSOLE COMMANDE ----
-window.resetCamilleChat = function() {
+window.resetCamilleChat = function () {
   memory = {
     user: { prenom: null, age: null, ville: null, passions: [], anecdotes: [], humeur: null },
     ia: {
@@ -625,6 +676,6 @@ window.resetCamilleChat = function() {
       lastAuto: 0
     }
   };
-  if(document.getElementById('chat-window')) document.getElementById('chat-window').innerHTML = '';
-  if(window.console) console.log("Chat et mémoire de Camille réinitialisés.");
+  if (document.getElementById('chat-window')) document.getElementById('chat-window').innerHTML = '';
+  if (window.console) console.log("Chat et mémoire de Camille réinitialisés.");
 };
