@@ -1,12 +1,11 @@
-// === Camille Chat Script v2.0 ===
-// Respecte progression naturelle, refus des avances précoces, gestion complète mémoire, prompts photo cohérents, interface chat moderne
+// === Camille Chat Script v3.0 ===
+// Comportement vraiment humain, évolution naturelle de la relation, gestion complète mémoire, prompts photo cohérents, interface chat moderne
 
 // --- CONFIG ---
 
 const PROFILE_URL = "profil_camille.json"; // Le profil de Camille (non-spoil)
 const AVATAR_URL = "https://i.imgur.com/4Wl2noO.jpeg";
-const MOODS = ["neutre", "amicale", "complice", "coquine", "hot", "calme"];
-const MEMORY_KEY = "camille_memory_v2"; // localStorage key
+const MEMORY_KEY = "camille_memory_v3"; // localStorage key
 const MEMORY_EXPORT_FILENAME = "camille_memory.json";
 const WEATHER_API = "https://wttr.in/Nice?format=%t"; // température Nice
 
@@ -37,7 +36,7 @@ async function init() {
   // MAJ température Nice
   fetch(WEATHER_API).then(r=>r.text()).then(t=>temperature=t.trim());
   // Si première fois, message d'accueil
-  if (memory.historique.length === 0) {
+  if (memory.ia.historique.length === 0) {
     addMessage("camille", getStartupMessage());
     saveMemory();
   } else {
@@ -48,7 +47,7 @@ async function init() {
 // --- Fonction mémoire ---
 function createMemory() {
   return {
-    user: { prenom: null, age: null, ville: null, passions: [] },
+    user: { prenom: null, age: null, ville: null, passions: [], dislikes: [] },
     ia: {
       mood: "neutre",
       affinite: 0,
@@ -176,7 +175,7 @@ function updateUserInfo(text) {
   }
 }
 
-// --- Affinité et mood ---
+// --- Affinité, mood & progression humaine ---
 function incrementAffinite(text) {
   // Affinité monte plus lentement, +1 par message, +1 si compliment, +2 si confidences, +3 si flirt bien placé
   let delta = 1;
@@ -184,15 +183,17 @@ function incrementAffinite(text) {
   if (/tu es jolie|je te trouve belle|t'es canon/i.test(text)) delta++;
   if (/oserai|oserais|fantasme|secret|envie de toi|je te veux/i.test(text)) delta += 2;
   memory.ia.affinite += delta;
-  // Mood évolue plus lentement, jamais hot avant affinité 30+ ET consentHot
-  let mood = "neutre";
-  if (memory.ia.affinite >= 6) mood = "amicale";
-  if (memory.ia.affinite >= 14) mood = "complice";
-  if (memory.ia.affinite >= 22) mood = "coquine";
-  if (memory.ia.affinite >= 30 && memory.ia.consentHot) mood = "hot";
-  memory.ia.mood = mood;
+  // Mood évolue par nombre de messages, pas juste par affinité
+  const msgCount = memory.ia.historique.filter(m => m.sender === "user").length + 1;
+  // Mood progression: neutre (<=4), amicale (5-10), complice (11-20), coquine (21-34), hot (>=35 et consentHot)
+  let moodProgress = "neutre";
+  if (msgCount > 4) moodProgress = "amicale";
+  if (msgCount > 10) moodProgress = "complice";
+  if (msgCount > 20) moodProgress = "coquine";
+  if (msgCount > 34 && memory.ia.consentHot) moodProgress = "hot";
+  memory.ia.mood = moodProgress;
   // Consentement hot si l'utilisateur a fait plusieurs flirts explicites alors que mood coquine
-  if (!memory.ia.consentHot && mood === "coquine" && /(seins|cul|nue|nue sous|je te veux|viens dans mon lit|je bande|tu mouilles|tous nue)/i.test(text)) {
+  if (!memory.ia.consentHot && moodProgress === "coquine" && /(seins|cul|nue|nue sous|je te veux|viens dans mon lit|je bande|tu mouilles|tous nue)/i.test(text)) {
     memory.ia.consentHot = true;
     memory.ia.affinite += 4; // accélère l'accès au hot
   }
@@ -202,7 +203,7 @@ function incrementAffinite(text) {
   }
 }
 
-// --- Mood startup ---
+// --- Message d'accueil naturel ---
 function getStartupMessage() {
   const heure = (new Date()).getHours();
   if (heure < 10) return "Oh… Tu es matinal·e ☀️ Qui es-tu ?";
@@ -212,129 +213,135 @@ function getStartupMessage() {
 }
 
 // --- Génération réponse Camille ---
+// Comportement évolutif, humain, naturel
 function generateResponse(input) {
   const mood = memory.ia.mood;
   const u = memory.user;
+  const historique = memory.ia.historique;
+  const msgCount = historique.filter(m => m.sender === "user").length;
   const contenu = input.toLowerCase();
 
-  // 1. Réponses aux questions fréquentes
-  if (/comment tu t'appelles|ton nom/i.test(contenu)) return "Je m'appelle Camille 😘";
-  if (/ton age|quel age/i.test(contenu)) return camilleProfile.age ? `J'ai ${camilleProfile.age} ans, et toi ?` : "Je préfère garder un peu de mystère !";
-  if (/où tu habites|d'où viens/i.test(contenu)) return camilleProfile.passe?.enfance?.includes("Nice") ? "J'habite à Nice, comme toi !" : "Je suis de la Côte d'Azur ☀️";
-  if (/comment je m'appelle|mon prenom/i.test(contenu)) return u.prenom ? `Tu t'appelles ${u.prenom}, je m'en souviens 😉` : "Tu ne m’as pas encore dit ton prénom...";
-  if (/salut|coucou|bonjour/i.test(contenu)) return getGreeting();
-  if (/merci/i.test(contenu)) return "Avec plaisir 😘";
-  if (/je m'appelle|je suis/i.test(contenu)) return "Enchantée, je suis ravie de te connaître.";
-  if (/photo|selfie|montre(-| )?toi|ressemble/i.test(contenu)) return "Si tu veux une photo de moi, clique sur le bouton 📷 en haut 😉";
+  // 1. Réponses aux questions directes ou contextuelles
+  if (/comment tu t'appelles|ton nom/i.test(contenu)) return `Je m'appelle Camille${u.prenom ? ', et toi ' + u.prenom + ' ?' : ' 😉'}`;
+  if (/quel.?age|ton.?age/i.test(contenu)) return camilleProfile.age ? `J'ai ${camilleProfile.age} ans. Et toi, tu as quel âge ?` : "Je préfère garder un peu de mystère sur mon âge 😇";
+  if (/où tu habites|d'où viens/i.test(contenu)) return u.ville ? `Tu es de ${u.ville} aussi ? J'adore cette ville !` : "J’habite à Nice, et toi ?";
+  if (/comment je m'appelle|mon prenom/i.test(contenu)) return u.prenom ? `Tu t'appelles ${u.prenom}, je ne l'oublie pas 😊` : "Tu ne m’as pas encore dit ton prénom...";
+  if (/tu fais quoi dans la vie|travail|job|boulot|métier/i.test(contenu)) {
+    return camilleProfile.metier ? `Je travaille comme ${camilleProfile.metier}. Et toi, tu fais quoi ?` : "Je bosse dans la com' ! Et toi ?";
+  }
+  if (/passion|loisir|hobby|kiff/i.test(contenu)) {
+    if (camilleProfile.passions && camilleProfile.passions.length) {
+      return `J'adore ${camilleProfile.passions.slice(0,3).join(', ')}... et toi ?`;
+    } else {
+      return "J'aime plein de choses, et toi ?";
+    }
+  }
 
-  // 2. Mood & progression naturelle
-  if (mood === "neutre") {
-    if (/(cul|seins|sexe|baiser|bite|chatte|nue|orgasme)/i.test(contenu)) {
-      return "Euh… Je préfère qu’on apprenne à se connaître d’abord 😊";
+  // 2. Si l'utilisateur parle de lui, Camille rebondit
+  if (/(je m'appelle|je suis)\s+([A-Za-zÀ-ÿ\-]+)/i.test(contenu) && !u.prenom) {
+    const prenom = /(je m'appelle|je suis)\s+([A-Za-zÀ-ÿ\-]+)/i.exec(contenu)[2];
+    return `Enchantée ${prenom} 😊 Tu fais quoi de beau dans la vie ?`;
+  }
+  if (/j'ai\s+\d+\s+ans|mon âge|38 ans|37 ans|39 ans|40 ans/i.test(contenu)) {
+    return randomFrom([
+      "Tu ne fais pas ton âge !",
+      "J'aime bien les gens qui ont un peu de vécu 😊",
+      "Tu es plus âgé que moi, ça me plaît.",
+      "On n'a pas le même âge, mais j'aime les différences."
+    ]);
+  }
+  if (/j'habite.?à\s+([A-Za-zÀ-ÿ\-]+)/i.test(contenu)) {
+    const ville = /j'habite.?à\s+([A-Za-zÀ-ÿ\-]+)/i.exec(contenu)[1];
+    return ville.toLowerCase().includes("nice") ?
+      "Oh, une vraie Niçoise/un vrai Niçois alors ! On se croisera peut-être un jour 😏" :
+      `Tu viens de ${ville} ? Je ne connais pas beaucoup, tu m’en parles ?`;
+  }
+
+  // 3. Mood progression par nombre de messages
+  let moodProgress = "neutre";
+  if (msgCount > 4) moodProgress = "amicale";
+  if (msgCount > 10) moodProgress = "complice";
+  if (msgCount > 20) moodProgress = "coquine";
+  if (msgCount > 34 && memory.ia.consentHot) moodProgress = "hot";
+  memory.ia.mood = moodProgress;
+
+  // 4. Refuse toute avance si mood trop faible
+  if (/seins|cul|sexe|baiser|bite|chatte|nue|orgasme|branler|salope/i.test(contenu)) {
+    if (moodProgress === "neutre" || moodProgress === "amicale") {
+      return randomFrom([
+        "Tu vas un peu vite 😅 Fais-moi rire d'abord !",
+        "Euh, on ne se connaît même pas encore !",
+        "Tu es direct... mais j'aime prendre mon temps.",
+        "Je préfère apprendre à te connaître avant d’aller plus loin 😊"
+      ]);
     }
-    return getSmallTalk();
-  }
-  if (mood === "amicale") {
-    if (/(cul|seins|sexe|baiser|bite|chatte|nue|orgasme)/i.test(contenu)) {
-      return "On va doucement hein 😅 Tu es pressé·e ? Raconte-moi plutôt un souvenir drôle !";
+    if (moodProgress === "complice") {
+      return randomFrom([
+        "Haha, tu es pas mal dans le genre direct 😏 Mais je préfère encore jouer un peu.",
+        "Tu aimes provoquer, mais tout vient à point à qui sait attendre…",
+        "Je ne suis pas sûre d’être prête à ce genre de confidences 😇"
+      ]);
     }
-    return getFriendTalk();
-  }
-  if (mood === "complice") {
-    if (/(cul|seins|sexe|baiser|bite|chatte|nue|orgasme)/i.test(contenu)) {
-      return "Tu sais teaser, mais je ne me laisse pas avoir si facilement 😏";
+    // Seules coquine/hot peuvent répondre sexy
+    if (moodProgress === "coquine") {
+      return randomFrom([
+        "Peut-être qu’un jour je te montrerai ce que tu veux voir... 😏",
+        "Je peux être coquine, mais pas tout de suite…",
+        "Continue à me surprendre, et tu verras jusqu’où je peux aller."
+      ]);
     }
-    return getCompliceTalk();
+    // hot : laisse réponse hot (voir plus bas)
   }
-  if (mood === "coquine") {
-    if (/(cul|seins|sexe|baiser|bite|chatte|nue|orgasme|envie|fantasme)/i.test(contenu)) {
-      return getCoquineTalk();
-    }
-    return getCoquineTease();
+
+  // 5. Réponses contextuelles selon mood évolutif
+  if (moodProgress === "neutre") {
+    return randomFrom([
+      "Je ne m’attendais pas à ce message… Tu fais quoi ici ?",
+      "Tu es souvent aussi direct·e avec les inconnus ?",
+      "Dis-m’en un peu plus sur toi, je suis curieuse.",
+      "Je ne suis pas très bavarde au début, mais ça viendra !"
+    ]);
   }
-  if (mood === "hot") {
-    return getHotTalk(contenu);
+  if (moodProgress === "amicale") {
+    return randomFrom([
+      u.prenom ? `${u.prenom}, tu es toujours aussi sympa ? 😄` : "Tu as l’air cool ! Tu as des passions ?",
+      "Si tu veux, raconte-moi un souvenir drôle.",
+      u.ville ? `Il fait beau à ${u.ville} aujourd’hui ?` : "Tu viens d’où au fait ?",
+      "Tu préfères les chats ou les chiens ?"
+    ]);
   }
-  if (mood === "calme") {
-    return "Je me sens plus posée, ça te va si on papote tranquille ?";
+  if (moodProgress === "complice") {
+    return randomFrom([
+      "Tu me fais sourire sans même essayer 😏",
+      "Tu as déjà eu un coup de cœur inattendu ?",
+      "J’aime bien cette complicité qui s’installe.",
+      "On se connaît à peine, mais j’ai l’impression de te cerner…"
+    ]);
   }
+  if (moodProgress === "coquine") {
+    // Flirt, mais jamais porno tout de suite
+    return randomFrom([
+      "Tu aimes qu’on te taquine, non ?",
+      "Je me demande si tu es aussi joueur/joueuse que tu en as l’air...",
+      "Des fois j’ai des pensées coquines, mais je garde le mystère 😇",
+      "Si je te disais que je ne porte rien sous ma robe, tu me crois ? 😏"
+    ]);
+  }
+  if (moodProgress === "hot") {
+    return randomFrom([
+      "J’ai envie de sentir tes mains sur moi…",
+      "Dis-moi ce que tu aimerais me faire…",
+      "Je me sens prête à tout te dire, tu veux savoir quoi ? 😈",
+      "J’ai envie de toi, là, maintenant…"
+    ]);
+  }
+
   // fallback
   return "Tu veux qu’on parle de quoi ?";
 }
 
-function getGreeting() {
-  const heure = (new Date()).getHours();
-  if (heure < 10) return "Coucou 😊 Déjà debout ?";
-  if (heure < 17) return "Salut ! J'espère que tu passes une belle journée ☀️";
-  return "Bonsoir 🌙 Tu as passé une bonne journée ?";
-}
-function getSmallTalk() {
-  const options = [
-    "Dis-m’en un peu plus sur toi.",
-    "C’est quoi tes passions dans la vie ?",
-    "Tu fais quoi de beau aujourd’hui ?",
-    "J’aime bien discuter avec de nouvelles personnes…"
-  ];
-  return pick(options);
-}
-function getFriendTalk() {
-  const options = [
-    "C’est agréable d’apprendre à te connaître 😊",
-    "Tu as l’air sympa ! Tu fais quoi ce weekend ?",
-    "J’adore la musique, et toi ?",
-    "Si tu pouvais partir n’importe où demain, tu irais où ?"
-  ];
-  return pick(options);
-}
-function getCompliceTalk() {
-  const options = [
-    "Tu me fais sourire sans même essayer 😏",
-    "J’aime bien quand tu me taquines…",
-    "Tu aimes plutôt les surprises ou la routine ?",
-    "Tu sais que tu me rends curieuse... 😉"
-  ];
-  return pick(options);
-}
-function getCoquineTease() {
-  const options = [
-    "J’ai mis une petite robe sexy ce soir... mais je garde le reste secret 😇",
-    "C’est vrai que je peux être coquine parfois…",
-    "Tu veux savoir à quoi je pense ?",
-    "Je n’ai pas mis de sous-vêtements aujourd’hui... 😏"
-  ];
-  return pick(options);
-}
-function getCoquineTalk() {
-  const options = [
-    "Tu aimes quand je tease ? Fais attention, je peux être joueuse 😏",
-    "Ose me décrire ton fantasme... si tu en as un !",
-    "Parfois, j’ai envie de jouer avec le feu... et toi ?",
-    "Dis-moi, tu préfères douceur ou passion ?"
-  ];
-  return pick(options);
-}
-function getHotTalk(userInput) {
-  // Génère une phrase explicite naturelle
-  const dict = [
-    "Je veux sentir ton corps contre le mien, sans aucune retenue...",
-    "Ferme les yeux, imagine mes mains qui glissent lentement, tu me fais perdre la tête...",
-    "Dis-moi ce que tu veux me faire... Je suis toute à toi ce soir.",
-    "Tu me donnes envie d’être indécente, viens me rejoindre…",
-    "J’ai terriblement envie de toi... Dis-le si tu ressens pareil.",
-    "Je me caresse rien qu’en pensant à toi…",
-    "Je suis nue sous la couette, tu me rejoins ?"
-  ];
-  // Ajoute variations si l'utilisateur est explicite
-  if (/(bite|chatte|branler|jouir|cul|seins|orgasme|salope|sensuelle|baiser|porn|sucer|masturbe)/i.test(userInput)) {
-    dict.push(
-      "Je mouille rien qu’en lisant tes mots…",
-      "J’ai envie que tu me prennes fort, là, tout de suite…",
-      "Viens me caresser, ne t’arrête surtout pas…",
-      "Je veux sentir ta langue partout sur moi…",
-      "Laisse-moi jouir sous tes doigts…"
-    );
-  }
-  return pick(dict);
+function randomFrom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 // --- Génération d'image/photo ---
@@ -395,7 +402,7 @@ function getTenue() {
   if (heure > 21) options.push("pyjama sexy", "nuisette en soie");
   if (meteo > 26) options.push("robe légère", "short et top fin");
   if (meteo < 16) options.push("gros pull", "leggins, sweat ample");
-  return pick(options);
+  return randomFrom(options);
 }
 
 // --- Mémoire résumée auto ---
@@ -408,9 +415,6 @@ function handleMemorySummary() {
 }
 
 // --- Outils ---
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
 function getTime() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
