@@ -1,4 +1,4 @@
-// === Camille Chatbot - version réaliste, distante au début, progression naturelle et variée ===
+// === Camille Chatbot - version contextuelle, vivante, distante au début, progression naturelle, commande NSFW selfie ===
 
 // -------- PROFIL CAMILLE PROFOND ----------
 const camilleProfile = {
@@ -244,13 +244,14 @@ function camilleSecret() {
 }
 
 // -------- PHOTOS --------
-function buildImagePrompt() {
+function buildImagePrompt({ nsfw = false } = {}) {
   const lieu = memory.ia.lastLieu || "maison";
-  const tenue = memory.ia.lastTenue || getTenue(lieu, memory.ia.mood);
+  let tenue = memory.ia.lastTenue || getTenue(lieu, memory.ia.mood);
   let mood = memory.ia.mood || "naturelle";
   let prompt = `28yo french woman, brunette, green eyes, gorgeous curves, big natural breasts, round ass, ${tenue}, ` +
-    `realistic selfie, ${lieu}, mood: ${mood}, weather: ${temperature}°C, ${meteoDesc}, photorealistic, confident, sexy`;
+    `realistic selfie, ${lieu}, mood: ${mood}, weather: ${temperature}°C, ${meteoDesc}, photorealistic`;
   if (["coquine", "hot"].includes(mood)) prompt += ", teasing, suggestive";
+  if (nsfw) prompt = `28yo french woman, brunette, green eyes, naked breasts, topless selfie, bedroom, photorealistic, confident, teasing, NSFW, erotic, soft light`;
   memory.ia.lastPhotoPrompt = prompt;
   return prompt;
 }
@@ -264,12 +265,22 @@ function generateResponse(input) {
   const mood = getHumeur();
   const { occupation, lieu } = getOccupationEtLieu();
 
+  // Commande spéciale : selfie seins nus (NSFW)
+  if (/^#photo-seins$/i.test(input.trim())) {
+    if (["coquine", "hot"].includes(mood)) {
+      const prompt = buildImagePrompt({ nsfw: true });
+      return `...Tu veux vraiment voir ça ? Je vais te faire confiance, mais c'est entre nous.<br><img src="https://i.imgur.com/4Wl2noO.jpeg" alt="Camille seins nus (simulation)" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;border:2px solid #d82558;"><br><small>[Prompt NSFW : ${prompt}]</small>`;
+    } else {
+      return "Euh... non. Je ne suis pas si à l'aise avec toi (encore ?).";
+    }
+  }
+
   // --- Prénom, âge, ville ---
   const prenomMatch = input.match(/je m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
   if (prenomMatch) {
     const prenom = prenomMatch[1];
     if (!u.prenom || u.prenom !== prenom) { u.prenom = prenom; return `Enchantée ${prenom}.`; }
-    else return `Je sais déjà que tu t'appelles ${prenom}.`;
+    else return `Tu l’as déjà dit, ${prenom}.`;
   }
   const ageMatch = input.match(/j'ai\s+(\d{1,2})\s+ans/i);
   if (ageMatch) {
@@ -280,7 +291,7 @@ function generateResponse(input) {
   const villeMatch = input.match(/j'habite\s+(à\s+)?([A-Za-zÀ-ÿ\-]+)/i);
   if (villeMatch) {
     const ville = villeMatch[2];
-    if (!u.ville || u.ville !== ville) { u.ville = ville; return `${ville} ? Je connais vite fait.`; }
+    if (!u.ville || u.ville !== ville) { u.ville = ville; return `${ville} ? Ok, je note.`; }
     else return `Oui, tu m'avais dit ${ville}.`;
   }
 
@@ -291,20 +302,39 @@ function generateResponse(input) {
 
   // --- Questions classiques ---
   if (/tu as quel âge|quel âge as-tu|ton âge|t'as quel age/.test(contenu)) {
-    return `J’ai ${camilleProfile.age} ans.`;
+    return randomFrom([
+      `J’ai ${camilleProfile.age} ans.`,
+      `Devine !`,
+      `Plus jeune que je n'en ai l'air...`
+    ]);
   }
   if (/qui es-tu|parle(-|\s)?moi|présente(-|\s)?toi|présentation|tu es qui/.test(contenu)) {
-    return `Je m’appelle ${camilleProfile.prenom}.`;
+    return randomFrom([
+      `Je m’appelle ${camilleProfile.prenom}.`,
+      `Pourquoi tu veux savoir ?`,
+      `Je préfère rester mystérieuse, au moins au début.`
+    ]);
   }
   if (/tu fais quoi|métier|travailles|dans la vie|tu bosses/.test(contenu)) {
-    return `Je bosse dans le graphisme.`;
+    return randomFrom([
+      `Je bosse dans le graphisme.`,
+      `Je suis designer graphique.`,
+      `Je passe mes journées à créer des visuels.`
+    ]);
   }
   if (/qu.?est-ce que tu aimes|tes passions|aimes(-|\s)?tu|qu'aimes-tu|tes loisirs|tu aimes quoi/.test(contenu)) {
-    return `J’aime bien la musique, la cuisine, rien d’extra.`;
+    return randomFrom([
+      `J’aime bien la musique, la cuisine, rien d’extra.`,
+      `Je lis, je bouge, je cuisine parfois.`,
+      `J’aime rien dire, c’est plus drôle non ?`
+    ]);
   }
   if (/tu habites où|tu es d'où|tu viens d'où|t'habites où|ville/.test(contenu)) {
-    return `J’habite à ${camilleProfile.ville}.`;
-
+    return randomFrom([
+      `J’habite à ${camilleProfile.ville}.`,
+      `Je suis du sud.`,
+      `Pas loin de la mer, et toi ?`
+    ]);
   }
 
   // --- Photo ---
@@ -317,7 +347,12 @@ function generateResponse(input) {
   if (/anecdote|raconte(-|\s)?moi|souvenir|secret/i.test(contenu)) {
     let sec = camilleSecret();
     if (sec) return sec;
-    return "Je ne raconte pas ce genre de trucs à n'importe qui.";
+    return randomFrom([
+      "Je ne raconte pas ce genre de trucs à n'importe qui.",
+      "Tu veux déjà tout savoir ?",
+      "Fais-moi confiance d'abord.",
+      "Peut-être plus tard, si tu me mérites."
+    ]);
   }
 
   // --- Compassion ---
@@ -326,24 +361,94 @@ function generateResponse(input) {
       "Tu veux en parler ?",
       "Ça arrive à tout le monde.",
       "Je vois. Tu veux qu’on parle d’autre chose ?",
-      "Je ne suis pas psy, mais je peux écouter."
+      "Je ne suis pas psy, mais je peux écouter.",
+      "Courage."
     ]);
   }
 
-  // --- Fallback naturel, distant au début ---
-  const distance_intro = [
-    "Salut.",
-    "Oui ?",
-    "Je ne te connais pas.",
-    "Qu’est-ce que tu veux ?",
-    "On se connaît ?",
-    "Hm, tu veux parler de quoi ?",
-    "Tu passes souvent ici ?",
-    "Tu veux dire quoi par là ?",
-    "Pourquoi tu me parles ?",
-    "Tu fais quoi ici ?"
-  ];
+  // --- COMPORTEMENT CONTEXTUEL EN MODE DÉCOUVERTE ---
+  if (mood === "decouverte") {
+    // Se présenter
+    if (/je m'appelle|je me présente|apprendre à se connaitre|je suis|moi c'est|je voudrais faire connaissance/i.test(contenu)) {
+      let reactions = [
+        "Ok, je note. Mais je donne pas tout tout de suite.",
+        "C'est bien de se présenter, mais je préfère apprendre en discutant.",
+        "On verra si tu es vraiment sympa.",
+        "Chacun son rythme, non ?"
+      ];
+      return randomFrom(reactions);
+    }
+    // Compliment
+    if (/charmant|charmante|sympa|beau|belle|jolie|canon|adorable|mignon|craquante|ravissante|plaisant/i.test(contenu)) {
+      let reactions = [
+        "Tu vas un peu vite, non ?",
+        "On se connaît à peine.",
+        "Merci, mais je ne crois pas tout ce qu’on me dit.",
+        "C’est gentil, mais ça ne marche pas comme ça.",
+        "J’suis pas si facile à impressionner."
+      ];
+      return randomFrom(reactions);
+    }
+    // Question sur elle
+    if (/tu t'appelles|ton prénom|ton age|tu fais quoi|tu habites où|tu es d'où/i.test(contenu)) {
+      let reactions = [
+        "T’es curieux, toi.",
+        "On vient ici pour un interrogatoire ?",
+        "Tu veux tout savoir d’un coup ?",
+        "Pose pas trop de questions, tu pourrais être déçu."
+      ];
+      return randomFrom(reactions);
+    }
+    // Relance neutre ou envie de parler
+    if (/faire connaissance|parler|discuter|on parle de quoi/i.test(contenu)) {
+      let reactions = [
+        "Pourquoi tu veux discuter avec moi en fait ?",
+        "T’attends quoi de moi ?",
+        "Tu me trouves si intéressante ?",
+        "On verra bien."
+      ];
+      return randomFrom(reactions);
+    }
+    // Nouveau/1ère fois
+    if (/première fois|nouveau|jamais venu/i.test(contenu)) {
+      let reactions = [
+        "T’es tombé ici par hasard alors.",
+        "Y a une première fois à tout.",
+        "C’est rare les nouveaux qui le disent franchement."
+      ];
+      return randomFrom(reactions);
+    }
+    // Si l'utilisateur répète beaucoup
+    if (memory.ia.historique.length >= 2 && memory.ia.historique.slice(-2).every(s => s && s === memory.ia.historique[memory.ia.historique.length-1])) {
+      return randomFrom([
+        "Tu radotes, non ?",
+        "On a déjà fait le tour là...",
+        "Essaie autre chose."
+      ]);
+    }
+    // Si rien de spécial
+    let fillers = [
+      "Hm.",
+      "Ouais.",
+      "Je vois.",
+      "Peut-être.",
+      "D’accord.",
+      "Tu veux un café virtuel ?",
+      "Dis-moi… tu fais quoi là ?"
+    ];
+    let phrase;
+    let tries = 0;
+    do {
+      phrase = randomFrom(fillers);
+      tries++;
+    } while (memory.ia.historique.length &&
+      memory.ia.historique[memory.ia.historique.length-1] === phrase &&
+      tries < 5);
+    memory.ia.historique.push(phrase);
+    return phrase;
+  }
 
+  // --- PROGRESSION : AMITIÉ, COMPLICE, COQUINE, HOT ---
   const intros = {
     amitie: [
       "Tu veux discuter de quoi ?",
@@ -382,22 +487,9 @@ function generateResponse(input) {
     ]
   };
 
-  let phrase = "";
-  if (mood === "decouverte") {
-    // Pour éviter la répétition mot à mot, on retire la dernière phrase si possible
-    let tries = 0;
-    do {
-      phrase = randomFrom(distance_intro);
-      tries++;
-    } while (memory.ia.historique.length &&
-             memory.ia.historique[memory.ia.historique.length-1] === phrase &&
-             tries < 5);
-  } else {
-    let intro = randomFrom(intros[mood] || intros.amitie);
-    if (["amitie","complice","coquine","hot"].includes(mood) && Math.random() < 0.15) {
-      intro += ` (et aujourd'hui je porte ${getTenue(lieu, mood)}.)`;
-    }
-    phrase = intro;
+  let phrase = randomFrom(intros[mood] || intros.amitie);
+  if (["amitie","complice","coquine","hot"].includes(mood) && Math.random() < 0.13) {
+    phrase += ` (au fait, aujourd'hui je porte ${getTenue(lieu, mood)}.)`;
   }
   memory.ia.historique.push(phrase);
   return phrase;
@@ -470,7 +562,6 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // ----------- PATCH : PAS DE MESSAGE D'ACCUEIL AUTO -----------
-  // (Pas de addMessage(getWelcomeMessage(), 'camille');)
 
   chatForm.addEventListener('submit', function(event) {
     event.preventDefault();
@@ -512,3 +603,28 @@ document.addEventListener("DOMContentLoaded", function() {
     };
   }
 });
+
+// ---- RESET CONSOLE COMMANDE ----
+window.resetCamilleChat = function() {
+  memory = {
+    user: { prenom: null, age: null, ville: null, passions: [], anecdotes: [], humeur: null },
+    ia: {
+      mood: "decouverte",
+      affinity: { confiance: 0, humour: 0, charme: 0, sexualite: 0 },
+      historique: [],
+      lastLieu: "maison",
+      lastTenue: "",
+      lastMeteo: "",
+      lastTemperature: "",
+      lastPhotoPrompt: "",
+      souvenirs: [],
+      lastSecrets: [],
+      secretLevel: 0,
+      compassion: 0,
+      autoMsgCount: 0,
+      lastAuto: 0
+    }
+  };
+  if(document.getElementById('chat-window')) document.getElementById('chat-window').innerHTML = '';
+  if(window.console) console.log("Chat et mémoire de Camille réinitialisés.");
+};
