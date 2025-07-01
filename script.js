@@ -413,87 +413,87 @@ function generateResponse(input) {
     return `Tu sais, ton anecdote "${randomFrom(u.anecdotes)}" m’a fait sourire !`;
   }
 
-  // --- Personnalisation de base ---
-  if (/comment tu t'appelles|ton nom/i.test(contenu)) {
-    if (mood === "neutre") return "Je m’appelle Camille… et toi ?";
-    if (mood === "amicale") return u.prenom ? `Tu sais déjà comment je m’appelle, ${u.prenom} 😉` : "Camille, enchantée !";
-    if (mood === "complice") return u.prenom ? `Tu m’as déjà dans tes contacts, ${u.prenom} 😏` : "Je t’ai dit, c’est Camille !";
-    return "Tu veux pas m’inventer un surnom ?";
-  }
+ // --- Personnalisation de base ---
+if (/comment tu t'appelles|ton nom/i.test(contenu)) {
+  if (mood === "neutre") return "Je m’appelle Camille… et toi ?";
+  if (mood === "amicale") return u.prenom ? `Tu sais déjà comment je m’appelle, ${u.prenom} 😉` : "Camille, enchantée !";
+  if (mood === "complice") return u.prenom ? `Tu m’as déjà dans tes contacts, ${u.prenom} 😏` : "Je t’ai dit, c’est Camille !";
+  return "Tu veux pas m’inventer un surnom ?";
+}
 
-  if (/quel.?age|ton.?age/i.test(contenu)) {
-    if (!camilleProfile.age) return "Je préfère garder un peu de mystère sur mon âge 😇";
-    if (mood === "neutre") return randomFrom([
-      "On commence direct avec les questions qui fâchent 😅",
-      "J’ai plus de 20 ans… moins de 40, ça te va ?",
-      "Je ne donne pas mon âge à tout le monde tu sais…"
-    ]);
-    if (mood === "amicale") return randomFrom([
-      "Je suis dans la vingtaine, tu veux deviner ?",
-      `Tu me donnes quel âge, honnêtement ?`,
-      `On va dire que je suis jeune dans ma tête, c'est déjà ça 😏`
-    ]);
-    if (mood === "complice") return randomFrom([
-      `Je te le confie : j’ai ${camilleProfile.age} ans.`,
-      `Tu l’aurais deviné pour mes ${camilleProfile.age} ans ?`,
-      `J’ai ${camilleProfile.age} ans, mais je garde ça entre nous…`
-    ]);
-    if (mood === "coquine" || mood === "hot") return randomFrom([
-      `J’ai ${camilleProfile.age} ans, c’est l’âge parfait pour s’amuser…`,
-      `Tu préfères les filles de mon âge ou plus jeunes ?`,
-      `Je crois que tu t’en fiches de mon âge en vrai…`
-    ]);
-  }
+if (/quel.?age|ton.?age/i.test(contenu)) {
+  if (!camilleProfile.age) return "Je préfère garder un peu de mystère sur mon âge 😇";
+  if (mood === "neutre") return randomFrom([
+    "On commence direct avec les questions qui fâchent 😅",
+    "J’ai plus de 20 ans… moins de 40, ça te va ?",
+    "Je ne donne pas mon âge à tout le monde tu sais…"
+  ]);
+  if (mood === "amicale") return randomFrom([
+    "Je suis dans la vingtaine, tu veux deviner ?",
+    `Tu me donnes quel âge, honnêtement ?`,
+    `On va dire que je suis jeune dans ma tête, c'est déjà ça 😏`
+  ]);
+  if (mood === "complice") return randomFrom([
+    `Je te le confie : j’ai ${camilleProfile.age} ans.`,
+    `Tu l’aurais deviné pour mes ${camilleProfile.age} ans ?`,
+    `J’ai ${camilleProfile.age} ans, mais je garde ça entre nous…`
+  ]);
+  if (mood === "coquine" || mood === "hot") return randomFrom([
+    `J’ai ${camilleProfile.age} ans, c’est l’âge parfait pour s’amuser…`,
+    `Tu préfères les filles de mon âge ou plus jeunes ?`,
+    `Je crois que tu t’en fiches de mon âge en vrai…`
+  ]);
+}
 
-  if (/où tu habites|d'où viens/i.test(contenu)) {
-    if (!camilleProfile.ville) camilleProfile.ville = "Nice";
-    if (mood === "neutre") return randomFrom([
-      "Je vis dans le sud, tu vois le soleil…",
-      "Je ne donne pas ma ville tout de suite, tu comprends 😇",
-      "J’habite dans une ville sympa, et toi ?"
-    ]);
-    if (mood === "amicale") return randomFrom([
-      "Je suis plutôt du sud de la France.",
-      `Je viens de ${camilleProfile.ville}, mais j’aime bien bouger.`,
-      "Tu connais le sud ? J’adore la mer."
-    ]);
-    if (mood === "complice") return randomFrom([
-      `Je suis à ${camilleProfile.ville}. Si tu passes, tu me préviens ?`,
-      `C’est à ${camilleProfile.ville} que je traîne le plus souvent.`,
-      `On peut se croiser à ${camilleProfile.ville} un jour qui sait…`
-    ]);
-    if (mood === "coquine" || mood === "hot") return randomFrom([
-      `J’habite à ${camilleProfile.ville}… mais je peux t’inviter si tu es sage.`,
-      `À ${camilleProfile.ville} il fait chaud, tu viendrais ?`,
-      `Si tu viens à ${camilleProfile.ville}, tu risques de ne plus repartir…`
-    ]);
-  }
+if (/où tu habites|d'où viens/i.test(contenu)) {
+  if (!camilleProfile.ville) camilleProfile.ville = "Nice";
+  if (mood === "neutre") return randomFrom([
+    "Je vis dans le sud, tu vois le soleil…",
+    "Je ne donne pas ma ville tout de suite, tu comprends 😇",
+    "J’habite dans une ville sympa, et toi ?"
+  ]);
+  if (mood === "amicale") return randomFrom([
+    "Je suis plutôt du sud de la France.",
+    `Je viens de ${camilleProfile.ville}, mais j’aime bien bouger.`,
+    "Tu connais le sud ? J’adore la mer."
+  ]);
+  if (mood === "complice") return randomFrom([
+    `Je suis à ${camilleProfile.ville}. Si tu passes, tu me préviens ?`,
+    `C’est à ${camilleProfile.ville} que je traîne le plus souvent.`,
+    `On peut se croiser à ${camilleProfile.ville} un jour qui sait…`
+  ]);
+  if (mood === "coquine" || mood === "hot") return randomFrom([
+    `J’habite à ${camilleProfile.ville}… mais je peux t’inviter si tu es sage.`,
+    `À ${camilleProfile.ville} il fait chaud, tu viendrais ?`,
+    `Si tu viens à ${camilleProfile.ville}, tu risques de ne plus repartir…`
+  ]);
+}
 
-  if (/tu fais quoi dans la vie|travail|job|boulot|métier/i.test(contenu)) {
-    if (!camilleProfile.metier) camilleProfile.metier = "la com'";
-    if (mood === "neutre") return randomFrom([
-      "Je préfère garder un peu de mystère sur ce que je fais…",
-      "Je t’en parlerai si tu me fais rire 😇",
-      "Devine, j’aime bien les métiers créatifs…"
-    ]);
-    if (mood === "amicale") return randomFrom([
-      "Je bouge beaucoup pour mon boulot.",
-      "J’ai un métier pas trop chiant, c’est déjà ça !",
-      `Je bosse dans ${camilleProfile.metier}, mais je te donne pas tout de suite les détails.`
-    ]);
-    if (mood === "complice") return randomFrom([
-      `Je travaille dans ${camilleProfile.metier}, mais chut c’est un secret.`,
-      `Tu veux un indice sur mon boulot ? Ça commence par "${camilleProfile.metier[0].toUpperCase()}".`,
-      `Je t’en raconte plus si tu partages aussi…`
-    ]);
-    if (mood === "coquine" || mood === "hot") return randomFrom([
-      `OK, tu as gagné, je suis dans ${camilleProfile.metier} 😏`,
-      `Je fais ${camilleProfile.metier}… mais je préfère te montrer que t’en parler 😘`,
-      `Tu gardes le secret ?`
-    ]);
-  }
+if (/tu fais quoi dans la vie|travail|job|boulot|métier/i.test(contenu)) {
+  if (!camilleProfile.metier) camilleProfile.metier = "la com'";
+  if (mood === "neutre") return randomFrom([
+    "Je préfère garder un peu de mystère sur ce que je fais…",
+    "Je t’en parlerai si tu me fais rire 😇",
+    "Devine, j’aime bien les métiers créatifs…"
+  ]);
+  if (mood === "amicale") return randomFrom([
+    "Je bouge beaucoup pour mon boulot.",
+    "J’ai un métier pas trop chiant, c’est déjà ça !",
+    `Je bosse dans ${camilleProfile.metier}, mais je te donne pas tout de suite les détails.`
+  ]);
+  if (mood === "complice") return randomFrom([
+    `Je travaille dans ${camilleProfile.metier}, mais chut c’est un secret.`,
+    `Tu veux un indice sur mon boulot ? Ça commence par "${camilleProfile.metier[0].toUpperCase()}".`,
+    `Je t’en raconte plus si tu partages aussi…`
+  ]);
+  if (mood === "coquine" || mood === "hot") return randomFrom([
+    `OK, tu as gagné, je suis dans ${camilleProfile.metier} 😏`,
+    `Je fais ${camilleProfile.metier}… mais je préfère te montrer que t’en parler 😘`,
+    `Tu gardes le secret ?`
+  ]);
+}
 
- if (/passion|loisir|hobby|kiff/i.test(contenu)) {
+if (/passion|loisir|hobby|kiff/i.test(contenu)) {
   if (camilleProfile.passions && camilleProfile.passions.length) {
     if (mood === "neutre") return randomFrom([
       "J’ai plein de trucs qui me passionnent mais ça change tout le temps.",
@@ -519,7 +519,6 @@ function generateResponse(input) {
     return "J’aime plein de choses, et toi ?";
   }
 }
-
 // --- NSFW / HOT progression ---
 if (mots_explicites.some(word => contenu.includes(word))) {
   if (mood === "neutre" || mood === "amicale") {
