@@ -271,7 +271,7 @@ async function hordeGenerateImage(prompt, nsfw = false) {
       sampler_name: "k_euler",
       steps: 28,
       cfg_scale: 7,
-      seed: Math.floor(Math.random() * 999999999),
+      seed: String(Math.floor(Math.random() * 999999999)), // PATCH : seed en string !
       clip_skip: 2
     },
     nsfw: nsfw,
