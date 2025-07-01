@@ -204,6 +204,37 @@ function getStartupMessage() {
   return "Tu ne dors pas ? 😏 Je ne connais même pas ton prénom…";
 }
 
+// --- Seuils pour progression réaliste ---
+const SEUIL_DECOUVERTE = 0;
+const SEUIL_AMICALE = 12;
+const SEUIL_COMPLICE = 30;
+const SEUIL_COQUINE = 60;
+const SEUIL_HOT = 90;
+
+// --- Mise à jour du mood ---
+function updateMood() {
+  const msgCount = memory.ia.historique.filter(m => m.sender === "user").length;
+  let mood = "neutre";
+  if (msgCount >= SEUIL_AMICALE) mood = "amicale";
+  if (msgCount >= SEUIL_COMPLICE) mood = "complice";
+
+  // Comptage des messages "coquins" et "hot"
+  const coquinMessages = memory.ia.historique.filter(m =>
+    m.sender === "user" && /sexy|chaud|coquine|sous-vêtements|fantasme|envie/i.test(m.msg)
+  ).length;
+  const hotMessages = memory.ia.historique.filter(m =>
+    m.sender === "user" && mots_explicites.some(word => m.msg.toLowerCase().includes(word))
+  ).length;
+
+  if (msgCount >= SEUIL_COQUINE && coquinMessages >= 3) mood = "coquine";
+  if (msgCount >= SEUIL_HOT && hotMessages >= 3) mood = "hot";
+
+  memory.ia.mood = mood;
+
+  // --- Affichage du compteur dans la console ---
+  console.log(`Messages utilisateur : ${msgCount} | Mood : ${mood}`);
+}
+
 // --- Envoi message utilisateur ---
 chatForm.onsubmit = (e) => {
   e.preventDefault();
@@ -217,16 +248,16 @@ function handleUserMessage(text) {
   addMessage("user", text);
   updateUserInfo(text);
   incrementAffinite(text);
+  updateMood(); // <-- Mood et compteur mis à jour ici
   const reply = generateResponse(text);
   memory.ia.historique.push({ sender: "user", msg: text, time: getTime() });
   memory.ia.historique.push({ sender: "camille", msg: reply, time: getTime() });
   saveMemory();
-  setTimeout(() => addMessage("camille", reply), 600 + Math.random()*400);
+  setTimeout(() => addMessage("camille", reply), 600 + Math.random() * 400);
   handleMemorySummary();
   clearTimeout(silenceTimer);
   silenceTimer = setTimeout(() => checkSilence(), 60000);
 }
-
 // --- Silences ---
 function checkSilence() {
   let lastUser = null;
