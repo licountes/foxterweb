@@ -443,3 +443,31 @@ window.buildImagePrompt = buildImagePrompt;
 window.saveMemoryManual = saveMemoryManual;
 window.loadMemoryManual = loadMemoryManual;
 window.camilleSpontaneousMessage = camilleSpontaneousMessage;
+document.addEventListener("DOMContentLoaded", function() {
+  const chatForm = document.getElementById('chat-form');
+  const userInput = document.getElementById('user-input');
+  const chatWindow = document.getElementById('chat-window');
+
+  function addMessage(text, sender = 'camille') {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message ' + sender;
+    msgDiv.innerHTML = text;
+    chatWindow.appendChild(msgDiv);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  // Message de bienvenue au chargement
+  addMessage(getWelcomeMessage(), 'camille');
+
+  chatForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const input = userInput.value.trim();
+    if (!input) return;
+    addMessage(input, 'user');
+    userInput.value = '';
+    setTimeout(() => {
+      const response = generateResponse(input);
+      if (response) addMessage(response, 'camille');
+    }, 400);
+  });
+});
