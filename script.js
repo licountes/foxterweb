@@ -447,16 +447,22 @@ function generateResponse(input) {
   // --- 3. Mini-jeu ou référence à souvenirs/anecdotes ---
   if (u.prenom && Math.random() < 0.06 && mood !== "neutre") {
     return randomFrom([
-      `Au fait, ${u.prenom}, pourquoi tu m’as écris la première fois ?`,
+      `Au fait, ${u.prenom}, pourquoi tu m’as écrit la première fois ?`,
       `${u.prenom}… je pensais justement à ce que tu m’as raconté sur ${u.ville ? u.ville : "ta vie"} !`,
       `J’aime bien quand tu me parles de tes souvenirs, ça me rapproche de toi.`
     ]);
   }
-  if (u.anecdotes && u.anecdotes.length > 0 && Math.random() < 0.08 && mood !== "neutre") {
-    return `Tu sais, ton anecdote "${randomFrom(u.anecdotes)}" m’a fait sourire !`;
+  if (Array.isArray(u.anecdotes) && u.anecdotes.length > 0 && Math.random() < 0.08 && mood !== "neutre") {
+    const anecdote = randomFrom(u.anecdotes.filter(Boolean));
+    if (anecdote && anecdote.length > 4) {
+      return `Tu sais, ton anecdote "${anecdote}" m’a fait sourire !`;
+    }
   }
-  if (memory.ia.souvenirs && memory.ia.souvenirs.length > 0 && Math.random() < 0.05 && mood !== "neutre") {
-    return `J’ai repensé à ça : "${randomFrom(memory.ia.souvenirs.map(s => s.msg))}"`;
+  if (Array.isArray(memory.ia.souvenirs) && memory.ia.souvenirs.length > 0 && Math.random() < 0.05 && mood !== "neutre") {
+    const souvenirsMsgs = memory.ia.souvenirs.map(s => s.msg).filter(Boolean);
+    if (souvenirsMsgs.length > 0) {
+      return `J’ai repensé à ça : "${randomFrom(souvenirsMsgs)}"`;
+    }
   }
 
   // --- 4. Humeur aléatoire de Camille, se renouvelle toutes les 5 interactions ---
@@ -467,15 +473,15 @@ function generateResponse(input) {
 
   // --- 5. Camille "a une vie" : occupation, météo, tenue glissée naturellement ---
   let detailsVie = "";
-  if (Math.random() < 0.26) {
+  if (typeof meteoDesc !== "undefined" && Math.random() < 0.26) {
     let meteoPhrase = "";
     if (meteoDesc.includes("pluie")) meteoPhrase = "il pleut dehors, ça me donne envie de rester sous la couette";
-    else if (parseInt(temperature) > 27) meteoPhrase = "il fait une chaleur de dingue à Nice, je ne porte presque rien";
-    else if (parseInt(temperature) < 15) meteoPhrase = "il fait frais, gros pull de rigueur";
+    else if (typeof temperature !== "undefined" && parseInt(temperature) > 27) meteoPhrase = "il fait une chaleur de dingue à Nice, je ne porte presque rien";
+    else if (typeof temperature !== "undefined" && parseInt(temperature) < 15) meteoPhrase = "il fait frais, gros pull de rigueur";
     if (meteoPhrase) detailsVie += meteoPhrase + ". ";
   }
   // Tenue dynamique
-  if (Math.random() < 0.28) {
+  if (typeof getTenue === "function" && Math.random() < 0.28) {
     detailsVie += "Aujourd’hui je porte " + getTenue(lieu) + ". ";
   }
   // Occupation, humeur
