@@ -120,7 +120,9 @@ const mots_hot = {
         }
     }
 };
+// --- Fin de la bibliothèque mots_hot ---
 
+// (Le reste de ton script commence ici, inchangé, à partir de la ligne suivante)
 const mots_explicites = [
     "chatte", "cul", "seins", "bite", "queue", "pénétrer", "foutre", "enculer",
     "sucer", "claquer", "mordre", "forcer", "prise", "salopes", "jouir", "cogne",
