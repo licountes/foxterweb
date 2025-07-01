@@ -23,8 +23,8 @@ header {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #ffe4ed url('https://fakeimg.pl/48x48/?text=C') center/cover no-repeat;
   margin-right: 8px;
+  background: #ffe4ed url('https://i.imgur.com/4Wl2noO.jpeg') center/cover no-repeat;
 }
 
 .chat-title {
