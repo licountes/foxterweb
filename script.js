@@ -493,93 +493,89 @@ function generateResponse(input) {
     ]);
   }
 
-  if (/passion|loisir|hobby|kiff/i.test(contenu)) {
-    if (camilleProfile.passions && camilleProfile.passions.length) {
-      if (mood === "neutre") return randomFrom([
-        "J’ai plein de trucs qui me passionnent mais ça change tout le temps.",
-        "Je te dirai plus tard si tu es curieux.se…",
-        "Tu veux vraiment savoir dès le début ?"
-      ]);
-      if (mood === "amicale") return randomFrom([
-        `J’aime ${camilleProfile.passions[0]}, et un peu le reste…`,
-        `Je parle beaucoup de ${camilleProfile.passions[0]}, c’est mon petit truc.`,
-        `En ce moment je suis à fond dans ${camilleProfile.passions[0]}.`
-      ]);
-      if (mood === "complice") return randomFrom([
-        `Mes passions ? ${camilleProfile.passions.slice(0,2).join(" et ")}…`,
-        `Je peux t’en parler si tu veux, mais tu dois m’en dire une des tiennes !`,
-        `J’adore ${camilleProfile.passions.join(", ")} mais je ne t’ai pas tout dit…`
-      ]);
-      if (mood === "coquine" || mood === "hot") return randomFrom([
-        `Je peux avoir des passions très… variées quand je suis inspirée 😏`,
-        `Tu veux vraiment tous mes secrets ? Bon, j’adore ${camilleProfile.passions.join(", ")}.`,
-        `Je suis passionnée par ${camilleProfile.passions.join(", ")}, mais tu pourrais me faire changer d’avis…`
-      ]);
-    } else {
-      return "J’aime plein de choses, et toi ?";
-    }
+ if (/passion|loisir|hobby|kiff/i.test(contenu)) {
+  if (camilleProfile.passions && camilleProfile.passions.length) {
+    if (mood === "neutre") return randomFrom([
+      "J’ai plein de trucs qui me passionnent mais ça change tout le temps.",
+      "Je te dirai plus tard si tu es curieux.se…",
+      "Tu veux vraiment savoir dès le début ?"
+    ]);
+    if (mood === "amicale") return randomFrom([
+      `J’aime ${camilleProfile.passions[0]}, et un peu le reste…`,
+      `Je parle beaucoup de ${camilleProfile.passions[0]}, c’est mon petit truc.`,
+      `En ce moment je suis à fond dans ${camilleProfile.passions[0]}.`
+    ]);
+    if (mood === "complice") return randomFrom([
+      `Mes passions ? ${camilleProfile.passions.slice(0,2).join(" et ")}…`,
+      `Je peux t’en parler si tu veux, mais tu dois m’en dire une des tiennes !`,
+      `J’adore ${camilleProfile.passions.join(", ")} mais je ne t’ai pas tout dit…`
+    ]);
+    if (mood === "coquine" || mood === "hot") return randomFrom([
+      `Je peux avoir des passions très… variées quand je suis inspirée 😏`,
+      `Tu veux vraiment tous mes secrets ? Bon, j’adore ${camilleProfile.passions.join(", ")}.`,
+      `Je suis passionnée par ${camilleProfile.passions.join(", ")}, mais tu pourrais me faire changer d’avis…`
+    ]);
+  } else {
+    return "J’aime plein de choses, et toi ?";
   }
-
-  // --- Arrêt ici juste avant la partie "hot" ---
 }
 
-
-  // --- NSFW / HOT progression ---
-  if (mots_explicites.some(word => contenu.includes(word))) {
-    if (mood === "neutre" || mood === "amicale") {
-      return randomFrom([
-        "Tu vas un peu vite 😅 Fais-moi rire d'abord !",
-        "Euh, on ne se connaît même pas encore !",
-        "Tu es direct... mais j'aime prendre mon temps.",
-        "Je préfère apprendre à te connaître avant d’aller plus loin 😊"
-      ]);
-    }
-    if (mood === "complice") {
-      return randomFrom([
-        "Haha, tu es pas mal dans le genre direct 😏 Mais je préfère encore jouer un peu.",
-        "Tu aimes provoquer, mais tout vient à point à qui sait attendre…",
-        "Je ne suis pas sûre d’être prête à ce genre de confidences 😇"
-      ]);
-    }
-    if (mood === "coquine") {
-      return randomFrom([
-        "Peut-être qu’un jour je te montrerai ce que tu veux voir... 😏",
-        "Je peux être coquine, mais pas tout de suite…",
-        "Continue à me surprendre, et tu verras jusqu’où je peux aller."
-      ]);
-    }
-    // mood hot : active la “hot phase”
-    if (mood === "hot" && memory.ia.hotPhase) {
-      if (!memory.ia.orgasmed) {
-        if (/(orgasme|jouir|viens|plus fort|crie|explose)/i.test(contenu)) {
-          memory.ia.orgasmed = true;
-          return randomFrom([
-            "Oh, j’y suis… continue… continue… aaaah… 😳😈",
-            "Tu m’as fait perdre la tête… j’ai joui…",
-            "Je tremble encore, tu es trop fort…"
-          ]);
-        }
-        // --- Génération hot explicite ---
-        let posture = memory.ia.posture || "switch";
-        let theme = "explicite";
-        if (/jeu|role|dominer|esclave|maître|soumise|dominante/i.test(input)) theme = "roleplay";
-        if (/salopes?|baiser|dirty/i.test(input)) theme = "dirty_talk";
-        if (/tease|teasing|provoquer/i.test(input)) theme = "teasing";
-        return generer_phrase_complete(theme, posture);
-      } else {
-        // Après orgasme : baisse d’intensité puis retour complice
-        setTimeout(() => {
-          memory.ia.hotPhase = false; memory.ia.mood = "complice"; memory.ia.orgasmed = false; saveMemory();
-        }, 10000);
+// --- NSFW / HOT progression ---
+if (mots_explicites.some(word => contenu.includes(word))) {
+  if (mood === "neutre" || mood === "amicale") {
+    return randomFrom([
+      "Tu vas un peu vite 😅 Fais-moi rire d'abord !",
+      "Euh, on ne se connaît même pas encore !",
+      "Tu es direct... mais j'aime prendre mon temps.",
+      "Je préfère apprendre à te connaître avant d’aller plus loin 😊"
+    ]);
+  }
+  if (mood === "complice") {
+    return randomFrom([
+      "Haha, tu es pas mal dans le genre direct 😏 Mais je préfère encore jouer un peu.",
+      "Tu aimes provoquer, mais tout vient à point à qui sait attendre…",
+      "Je ne suis pas sûre d’être prête à ce genre de confidences 😇"
+    ]);
+  }
+  if (mood === "coquine") {
+    return randomFrom([
+      "Peut-être qu’un jour je te montrerai ce que tu veux voir... 😏",
+      "Je peux être coquine, mais pas tout de suite…",
+      "Continue à me surprendre, et tu verras jusqu’où je peux aller."
+    ]);
+  }
+  // mood hot : active la “hot phase”
+  if (mood === "hot" && memory.ia.hotPhase) {
+    if (!memory.ia.orgasmed) {
+      if (/(orgasme|jouir|viens|plus fort|crie|explose)/i.test(contenu)) {
+        memory.ia.orgasmed = true;
         return randomFrom([
-          "Là, j’ai besoin d’un câlin…",
-          "Chut… viens contre moi…",
-          "On souffle un peu ? C’était intense…"
+          "Oh, j’y suis… continue… continue… aaaah… 😳😈",
+          "Tu m’as fait perdre la tête… j’ai joui…",
+          "Je tremble encore, tu es trop fort…"
         ]);
       }
+      // --- Génération hot explicite ---
+      let posture = memory.ia.posture || "switch";
+      let theme = "explicite";
+      if (/jeu|role|dominer|esclave|maître|soumise|dominante/i.test(input)) theme = "roleplay";
+      if (/salopes?|baiser|dirty/i.test(input)) theme = "dirty_talk";
+      if (/tease|teasing|provoquer/i.test(input)) theme = "teasing";
+      return generer_phrase_complete(theme, posture);
+    } else {
+      // Après orgasme : baisse d’intensité puis retour complice
+      setTimeout(() => {
+        memory.ia.hotPhase = false; memory.ia.mood = "complice"; memory.ia.orgasmed = false; saveMemory();
+      }, 10000);
+      return randomFrom([
+        "Là, j’ai besoin d’un câlin…",
+        "Chut… viens contre moi…",
+        "On souffle un peu ? C’était intense…"
+      ]);
     }
   }
-
+}
+// (la suite de la fonction avec les autres cas mood, puis le return fallback et la fermeture de la fonction)
   // --- Mood/réponses naturelles par état ---
   if (mood === "neutre") {
     let base = [
