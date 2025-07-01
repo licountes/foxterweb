@@ -133,14 +133,20 @@ function loadMemoryManual(file, callback) {
 
 // -------- UTILITAIRES --------
 function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function heure() { return (new Date()).getHours(); }
+
+// Heure locale Nice (précise)
+function heureNice() {
+  // Fuseau Europe/Paris (Nice)
+  const now = new Date();
+  return new Date(now.toLocaleString("en-US", { timeZone: "Europe/Paris" })).getHours();
+}
 function now() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
-function isNight() { let h = heure(); return (h > 21 || h < 6); }
+function isNight() { let h = heureNice(); return (h > 21 || h < 7); }
 
 // -------- TENUE DYNAMIQUE --------
 function getTenue(lieu="maison", mood="decouverte") {
   let choix = [];
-  const h = heure();
+  const h = heureNice();
   if (lieu === "travail") choix = camilleProfile.tenues.travail;
   else if (lieu === "plage") choix = camilleProfile.tenues.plage;
   else if (lieu === "soiree" || (h > 19 && h < 23)) choix = camilleProfile.tenues.soiree;
@@ -148,8 +154,8 @@ function getTenue(lieu="maison", mood="decouverte") {
   // Météo
   if (parseInt(temperature) > 27) choix.push("short ultra court, top transparent, sandales");
   if (parseInt(temperature) < 15) choix.push("gros pull en laine, leggings moulants");
-  // Sexy selon mood
-  if (["coquine", "hot"].includes(mood) && Math.random() < 0.6) choix.push("lingerie fine sous mes vêtements");
+  // Sexy selon mood (plus rare désormais)
+  if (["coquine", "hot"].includes(mood) && Math.random() < 0.35) choix.push("lingerie fine sous mes vêtements");
   let tenue = randomFrom(choix);
   if (tenue === memory.ia.lastTenue) tenue = randomFrom(choix);
   memory.ia.lastTenue = tenue;
@@ -158,14 +164,14 @@ function getTenue(lieu="maison", mood="decouverte") {
 
 // -------- OCCUPATION & LIEU --------
 function getOccupationEtLieu() {
-  const h = heure();
+  const h = heureNice();
   let occupation = "", lieu = "maison";
   if (h >= 8 && h < 12) { occupation = "je termine un projet pour un client, concentrée !"; lieu = "travail"; }
   else if (h >= 12 && h < 14) { occupation = "je savoure mon déjeuner (en solo aujourd'hui)"; lieu = "travail"; }
   else if (h >= 14 && h < 18) { occupation = "je bosse sur des maquettes, café à la main"; lieu = "travail"; }
   else if (h >= 18 && h < 20) { occupation = "je rentre chez moi, musique dans les oreilles"; lieu = "maison"; }
   else if (h >= 20 && h < 23) { occupation = "je me détends, un verre de vin rouge à la main"; lieu = "maison"; }
-  else if (h >= 23 || h < 6) { occupation = "je traîne en nuisette, prête à aller au lit..."; lieu = "maison"; }
+  else if (h >= 23 || h < 7) { occupation = "je traîne en nuisette, prête à aller au lit..."; lieu = "maison"; }
   else { occupation = "je démarre ma journée doucement, café et musique"; lieu = "maison"; }
   if (meteoDesc.includes("pluie") && lieu !== "travail") {
     occupation += " (il pleut, je reste bien au chaud)";
@@ -181,11 +187,11 @@ function getHumeur() {
   let mood = "decouverte";
   // Compassion prioritaire
   if (memory.user.humeur === "triste" || memory.ia.compassion > 3) return "compassion";
-  // Progression par jauges croisées
-  if (aff.confiance > 8 && aff.humour > 5) mood = "amitie";
-  if (aff.confiance > 15 && aff.humour > 8 && aff.charme > 7) mood = "complice";
-  if (aff.charme > 12 && aff.sexualite > 8 && mood === "complice") mood = "coquine";
-  if (aff.sexualite > 16 && mood === "coquine") mood = "hot";
+  // Progression par jauges croisées (seuils durcis)
+  if (aff.confiance > 10 && aff.humour > 7) mood = "amitie";
+  if (aff.confiance > 18 && aff.humour > 10 && aff.charme > 10) mood = "complice";
+  if (aff.charme > 16 && aff.sexualite > 10 && mood === "complice") mood = "coquine";
+  if (aff.sexualite > 20 && mood === "coquine") mood = "hot";
   memory.ia.mood = mood;
   return mood;
 }
@@ -214,8 +220,8 @@ function incrementAffinity(text) {
   if (/oserai|oserais|fantasme|envie de toi|tu me plais|tu es belle|magnifique|belle|séduisante|flirt|séduction/i.test(t)) memory.ia.affinity.charme += 2;
   // Sexualité (uniquement si complicité déjà présente)
   if (["complice","coquine","hot"].includes(memory.ia.mood) && /cul|sexe|seins|fesses|sexy|nue|masturbe|fantasme|excite|chaud|bite|queue|éjac|branle|jouir|orgasme/i.test(t)) memory.ia.affinity.sexualite += 3;
-  // Participation générale
-  memory.ia.affinity.confiance += 1;
+  // Participation générale (moins rapide)
+  memory.ia.affinity.confiance += 0.5;
   if (memory.ia.affinity.confiance > 25) memory.ia.affinity.confiance = 25;
   if (memory.ia.affinity.humour > 20) memory.ia.affinity.humour = 20;
   if (memory.ia.affinity.charme > 20) memory.ia.affinity.charme = 20;
@@ -225,9 +231,9 @@ function incrementAffinity(text) {
 // --------- SECRETS MULTI-NIVEAUX ---------
 function camilleSecret() {
   let level = memory.ia.secretLevel;
-  if (level < 1 && memory.ia.affinity.confiance > 7) level = 1;
-  if (level < 2 && memory.ia.affinity.confiance > 14 && memory.ia.affinity.charme > 6) level = 2;
-  if (level < 3 && memory.ia.affinity.confiance > 18 && memory.ia.affinity.sexualite > 10) level = 3;
+  if (level < 1 && memory.ia.affinity.confiance > 13) level = 1;
+  if (level < 2 && memory.ia.affinity.confiance > 20 && memory.ia.affinity.charme > 12) level = 2;
+  if (level < 3 && memory.ia.affinity.confiance > 23 && memory.ia.affinity.sexualite > 18) level = 3;
   if (level > memory.ia.secretLevel) memory.ia.secretLevel = level;
   let pool = [];
   if (level > 0) pool = pool.concat(camilleProfile.secrets.niveau1);
@@ -243,7 +249,12 @@ function camilleSecret() {
 // -------- MESSAGE DE BIENVENUE --------
 function getWelcomeMessage() {
   const { occupation, lieu } = getOccupationEtLieu();
-  return `Coucou, moi c'est ${camilleProfile.prenom} 😘 J’ai ${camilleProfile.age} ans, je vis à ${camilleProfile.ville}. Aujourd’hui je porte ${getTenue(lieu)}. ${occupation}.`;
+  let meteo = meteoDesc;
+  let heure = heureNice();
+  if (isNight()) {
+    meteo = "la nuit est douce";
+  }
+  return `Coucou, moi c'est ${camilleProfile.prenom} 😘 J’ai ${camilleProfile.age} ans, je vis à ${camilleProfile.ville}. Aujourd’hui je porte ${getTenue(lieu)}. ${occupation}. Ici à ${camilleProfile.ville}, il fait ${temperature}°C et ${meteo}.`;
 }
 
 // -------- PHOTOS --------
@@ -395,7 +406,11 @@ function generateResponse(input) {
   let phrase = intro + " ";
   phrase += `Aujourd’hui je porte ${getTenue(lieu, mood)}. `;
   phrase += `${occupation}. `;
-  if (meteoDesc) phrase += `Ici à ${camilleProfile.ville}, il fait ${temperature}°C et c’est ${meteoDesc}.`;
+  let meteo = meteoDesc;
+  if (isNight()) {
+    meteo = "la nuit est douce";
+  }
+  if (meteo) phrase += `Ici à ${camilleProfile.ville}, il fait ${temperature}°C et ${meteo}.`;
   if (Math.random() < 0.22 && ["complice","coquine","hot"].includes(mood)) phrase += ` Tu veux que je te raconte une anecdote un peu sexy ?`;
   return phrase;
 }
@@ -443,10 +458,16 @@ window.buildImagePrompt = buildImagePrompt;
 window.saveMemoryManual = saveMemoryManual;
 window.loadMemoryManual = loadMemoryManual;
 window.camilleSpontaneousMessage = camilleSpontaneousMessage;
+
+// --------- INTERFACE CHAT ---------
 document.addEventListener("DOMContentLoaded", function() {
   const chatForm = document.getElementById('chat-form');
   const userInput = document.getElementById('user-input');
   const chatWindow = document.getElementById('chat-window');
+  const exportBtn = document.getElementById('export-memory');
+  const importBtn = document.getElementById('import-memory');
+  const importFile = document.getElementById('import-file');
+  const generatePhotoBtn = document.getElementById('generate-photo');
 
   function addMessage(text, sender = 'camille') {
     const msgDiv = document.createElement('div');
@@ -470,4 +491,32 @@ document.addEventListener("DOMContentLoaded", function() {
       if (response) addMessage(response, 'camille');
     }, 400);
   });
+
+  // Export mémoire bouton
+  if (exportBtn) exportBtn.onclick = function() {
+    saveMemoryManual();
+  };
+
+  // Import mémoire bouton
+  if (importBtn && importFile) {
+    importBtn.onclick = function() {
+      importFile.click();
+    };
+    importFile.onchange = function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        loadMemoryManual(file, function(success) {
+          addMessage(success ? "Mémoire importée !" : "Erreur d'import.", "camille");
+        });
+      }
+    };
+  }
+
+  // Générer photo bouton
+  if (generatePhotoBtn) {
+    generatePhotoBtn.onclick = function() {
+      const response = generateResponse("photo");
+      addMessage(response, "camille");
+    };
+  }
 });
