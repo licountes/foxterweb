@@ -143,24 +143,19 @@ function isNight() { let h = heureNice(); return (h > 21 || h < 7); }
 function getTenue(lieu="maison", mood="decouverte") {
   let choix = [];
   const h = heureNice();
-
-  // Mood découverte/amitie = jamais de soirée/sexy !
   if (lieu === "travail") choix = camilleProfile.tenues.travail;
   else if (lieu === "plage") choix = camilleProfile.tenues.plage;
   else if (lieu === "soiree" && ["complice","coquine","hot"].includes(mood)) choix = camilleProfile.tenues.soiree;
   else choix = camilleProfile.tenues.maison;
 
-  // Météo
   if (parseInt(temperature) > 27) choix.push("short, t-shirt léger, sandales");
   if (parseInt(temperature) < 15) choix.push("gros pull en laine, leggings moulants");
 
-  // Sexy selon mood (plus rare désormais)
   if (["coquine", "hot"].includes(mood) && Math.random() < 0.35) choix.push("lingerie fine sous mes vêtements");
 
-  // En mode découverte/amitie : jamais de nuisette, lingerie, sexy, moulant, combishort, talons, robe courte, soiree
+  // Découverte/amitié : jamais d'habits sexy/soirée
   if (["decouverte","amitie"].includes(mood)) {
     choix = choix.filter(t => !/nuisette|lingerie|sexy|moulante|combishort|talons|robe courte/i.test(t));
-    // Empêche la catégorie soirée d'être utilisée
     choix = choix.filter(t => !camilleProfile.tenues.soiree.includes(t));
     if (choix.length === 0) choix = ["jeans, t-shirt ajusté, baskets"];
   }
@@ -179,13 +174,11 @@ function getOccupationEtLieu() {
   else if (h >= 14 && h < 18){ occupation = "je bosse sur des maquettes, café à la main"; lieu = "travail"; }
   else if (h >= 18 && h < 20){ occupation = "je rentre chez moi, musique dans les oreilles"; lieu = "maison"; }
   else if (h >= 20 && h < 23){
-    // verre de vin QUE mood complice ou plus
     if(["complice","coquine","hot"].includes(memory.ia.mood)) occupation = "je me détends, un verre de vin rouge à la main";
     else occupation = "je lis un livre ou je regarde une série tranquille";
     lieu = "maison";
   }
   else if (h >= 23 || h < 7){
-    // nuisette QUE mood coquine/hot
     if(["coquine","hot"].includes(memory.ia.mood)) occupation = "je traîne en nuisette, prête à aller au lit...";
     else occupation = "je vais bientôt me coucher, je lis un bouquin";
     lieu = "maison";
@@ -257,13 +250,13 @@ function camilleSecret() {
   return toReveal;
 }
 
-// -------- MESSAGE DE BIENVENUE --------
+// -------- MESSAGE DE BIENVENUE (pas de tenue, pas d'expo vestimentaire) --------
 function getWelcomeMessage() {
-  const { occupation, lieu } = getOccupationEtLieu();
+  const { occupation } = getOccupationEtLieu();
   let meteo = meteoDesc;
   if (isNight()) meteo = "la nuit est douce";
-  // Message d'accueil neutre, sympathique, pas ambigu
-  return `Bonjour 😊 Moi c'est ${camilleProfile.prenom}, ${camilleProfile.age} ans à ${camilleProfile.ville}. Aujourd'hui je porte ${getTenue(lieu, "decouverte")}. ${occupation.charAt(0).toUpperCase() + occupation.slice(1)}. Ici à ${camilleProfile.ville}, il fait ${temperature}°C et ${meteo}.`;
+  // PAS DE TENUE dans le message d'accueil
+  return `Bonjour 😊 Moi c'est ${camilleProfile.prenom}, ${camilleProfile.age} ans à ${camilleProfile.ville}. ${occupation.charAt(0).toUpperCase() + occupation.slice(1)}. Ici à ${camilleProfile.ville}, il fait ${temperature}°C et ${meteo}.`;
 }
 
 // -------- PHOTOS --------
@@ -305,6 +298,11 @@ function generateResponse(input) {
     const ville = villeMatch[2];
     if (!u.ville || u.ville !== ville) { u.ville = ville; return `${ville}, c’est sympa ! Tu me feras visiter ?`; }
     else return `On en a déjà parlé, tu habites à ${ville} 😊`;
+  }
+
+  // Question explicite sur la tenue
+  if (/tu portes quoi|es habillée comment|tu es habillée comment|tenue|vêtements|tu mets quoi|comment tu t'habilles/i.test(contenu)) {
+    return `Aujourd'hui ? Je porte ${getTenue(lieu, mood)} 😊`;
   }
 
   // --- Questions classiques ---
@@ -376,7 +374,7 @@ function generateResponse(input) {
     }
   }
 
-  // --- Fallback naturel, occupation/tenue/météo/humeur ---
+  // --- Fallback naturel, occupation/météo/humeur/tenue ---
   const intros = {
     decouverte: [
       "On apprend à se connaître, j’aime bien ce moment.",
@@ -412,7 +410,10 @@ function generateResponse(input) {
   let intro = randomFrom(intros[mood] || intros.decouverte);
 
   let phrase = intro + " ";
-  phrase += `Aujourd'hui je porte ${getTenue(lieu, mood)}. `;
+  // Ajoute la tenue UNIQUEMENT mood >= amitie, et pas tout le temps (20% de chances)
+  if (["amitie","complice","coquine","hot"].includes(mood) && Math.random() < 0.2) {
+    phrase += `Tiens, aujourd'hui je porte ${getTenue(lieu, mood)}. `;
+  }
   phrase += `${occupation.charAt(0).toUpperCase() + occupation.slice(1)}. `;
   let meteo = meteoDesc;
   if (isNight()) meteo = "la nuit est douce";
