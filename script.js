@@ -747,20 +747,6 @@ const mots_hot = {
     }
 };
 
-// (Le reste de ton script commence ici, inchangé, à partir de la ligne suivante)
-const mots_explicites = [
-    "chatte", "cul", "seins", "bite", "queue", "pénétrer", "foutre", "enculer",
-    "sucer", "claquer", "mordre", "forcer", "prise", "salopes", "jouir", "cogne",
-    "squirt", "ejac", "sperme", "branler", "gode", "vibrer", "baiser", "baiser",
-    "dildo", "capote", "préservatif", "fellation", "gémir", "mordre", "masturbation",
-    "orgasme", "plaisir", "tétine", "clitoris", "cuisses", "fesses", "bouche",
-    "toucher", "caresser", "mordre", "embrasser", "pénétration", "sexe",
-    "lécher", "sodomie", "putain", "pute", "nique", "branlette", "pipi",
-    "trancher", "sodomiser", "gouine", "tapiner", "péter", "fourrer", "épier",
-    "douleur", "extase", "teasing", "soumise", "dominante", "bondage", "fessée",
-    "collier", "menottes", "gode-ceinture"
-];
-
 // Fonction de génération de phrase hot complète
 function generer_phrase_complete(theme, posture) {
     const corps = randomFrom(mots_hot[theme][posture]["corps"]);
