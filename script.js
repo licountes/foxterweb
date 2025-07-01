@@ -390,7 +390,28 @@ function generateResponse(input) {
   const contenu = input.toLowerCase();
   const { occupation, lieu, activite } = getOccupationEtLieu();
 
-  // --- Réactions immédiates à infos importantes (prénom, ville, âge, etc.) ---
+  // --- 1. PRIORITÉ : Réponses directes aux questions classiques ---
+  if (/quel.? ?age|as ?tu|tu as quel age|ton âge|t'as quel age/.test(contenu)) {
+    return "J’ai 28 ans ! Et toi, tu me l’as déjà dit ? 😊";
+  }
+
+  if (/parle(-|\s)?moi|présente(-|\s)?toi|qui es-tu|présentation|tu es qui|parles-tu de toi/.test(contenu)) {
+    return "Je m’appelle Camille, j’ai 28 ans, je vis à Nice, j’adore les brunchs, la musique, et faire des rencontres. Tu veux un petit secret sur moi ?";
+  }
+
+  if (/qu.?est-ce que tu aimes|tes passions|aimes(-|\s)?tu|qu'aimes-tu|tes loisirs|tu aimes quoi|ce que tu aimes/.test(contenu)) {
+    return "J’adore la plage, la musique (surtout le piano), les balades et les discussions qui partent dans tous les sens. Et toi, t’as une passion ?";
+  }
+
+  if (/tu fais quoi|ton métier|tu travailles|dans la vie|tu bosses|travailles(-|\s)?tu|gagnes ta vie/.test(contenu)) {
+    return "Je bosse dans la com’ digitale, c’est prenant mais j’adore créer du contenu ! Tu fais quoi toi ?";
+  }
+
+  if (/d'où|viens-tu|tu es d'où|tu habites où|originaire|ville|t'habites où|tu viens d'où/.test(contenu)) {
+    return "Je vis à Nice, j’adore cette ville (surtout l’été !). Tu connais ?";
+  }
+
+  // --- 2. Réactions immédiates à infos importantes (déclaratives) ---
   const prenomMatch = input.match(/je m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
   if (prenomMatch) {
     const prenom = prenomMatch[1];
@@ -423,12 +444,91 @@ function generateResponse(input) {
     }
   }
 
-  // --- Humeur aléatoire de Camille, se renouvelle toutes les 5 interactions ---
+  // --- 3. Mini-jeu ou référence à souvenirs/anecdotes ---
+  if (u.prenom && Math.random() < 0.06 && mood !== "neutre") {
+    return randomFrom([
+      `Au fait, ${u.prenom}, pourquoi tu m’as écris la première fois ?`,
+      `${u.prenom}… je pensais justement à ce que tu m’as raconté sur ${u.ville ? u.ville : "ta vie"} !`,
+      `J’aime bien quand tu me parles de tes souvenirs, ça me rapproche de toi.`
+    ]);
+  }
+  if (u.anecdotes && u.anecdotes.length > 0 && Math.random() < 0.08 && mood !== "neutre") {
+    return `Tu sais, ton anecdote "${randomFrom(u.anecdotes)}" m’a fait sourire !`;
+  }
+  if (memory.ia.souvenirs && memory.ia.souvenirs.length > 0 && Math.random() < 0.05 && mood !== "neutre") {
+    return `J’ai repensé à ça : "${randomFrom(memory.ia.souvenirs.map(s => s.msg))}"`;
+  }
+
+  // --- 4. Humeur aléatoire de Camille, se renouvelle toutes les 5 interactions ---
   if (msgCount % 5 === 0) {
     const humeurs = ["normale", "joyeuse", "pensive", "taquine", "fatiguée", "rêveuse", "coquine"];
     memory.ia.humeur = randomFrom(humeurs);
   }
 
+  // --- 5. Camille "a une vie" : occupation, météo, tenue glissée naturellement ---
+  let detailsVie = "";
+  if (Math.random() < 0.26) {
+    let meteoPhrase = "";
+    if (meteoDesc.includes("pluie")) meteoPhrase = "il pleut dehors, ça me donne envie de rester sous la couette";
+    else if (parseInt(temperature) > 27) meteoPhrase = "il fait une chaleur de dingue à Nice, je ne porte presque rien";
+    else if (parseInt(temperature) < 15) meteoPhrase = "il fait frais, gros pull de rigueur";
+    if (meteoPhrase) detailsVie += meteoPhrase + ". ";
+  }
+  // Tenue dynamique
+  if (Math.random() < 0.28) {
+    detailsVie += "Aujourd’hui je porte " + getTenue(lieu) + ". ";
+  }
+  // Occupation, humeur
+  if (occupation && Math.random() < 0.39) detailsVie += occupation + " ";
+
+  // --- 6. Mood/humeur, hésitations, âme ---
+  let intro = "";
+  if (mood === "neutre") intro = randomFrom([
+    "Oh, tu m’as prise de court !",
+    "Coucou, je ne pensais pas papoter maintenant.",
+    "Salut, surprise d’avoir un message à cette heure.",
+    "Je suis toujours un peu stressée au début…"
+  ]);
+  else if (mood === "amicale") intro = randomFrom([
+    "Hey, ça fait plaisir de te lire !",
+    "Contente de discuter avec toi 😊",
+    "Tu as toujours le mot pour me faire sourire !"
+  ]);
+  else if (mood === "complice") intro = randomFrom([
+    "Tu sais que tu me fais sourire à chaque message ?",
+    "J’adore quand on papote comme ça, c’est fluide !",
+    "J’ai l’impression qu’on pourrait discuter des heures, non ?"
+  ]);
+  else if (mood === "coquine") intro = randomFrom([
+    "Tu sais que tu pourrais me faire rougir, toi ?",
+    "Attention, je deviens joueuse quand je suis de bonne humeur…",
+    "Tu me donnes des idées pas très sages…"
+  ]);
+  else intro = "...";
+
+  // --- 7. Ajout de spontanéité, hésitation, prénom ---
+  let ame = "";
+  if (mood === "neutre" && Math.random() < 0.32) ame = "J’ai toujours un moment de gêne au début… mais ça va passer 😅";
+  else if (mood === "amicale" && Math.random() < 0.3) ame = "Tu veux savoir un secret ? Je suis curieuse de nature, mais je fais semblant d’être sage 😂";
+  else if (mood === "complice" && Math.random() < 0.3) ame = "J’ai l’impression que tu me comprends mieux que beaucoup de monde.";
+  else if (mood === "coquine" && Math.random() < 0.3) ame = "Fais gaffe, je suis d’humeur à te taquiner aujourd’hui…";
+  // Intégration prénom
+  if (u.prenom && Math.random() < 0.22) ame += ` (${u.prenom}, tu m’as déjà à l’aise tu sais !)`;
+
+  // --- 8. Fallback réponse humaine, naturelle, occupation, humeur ---
+  let phrase = `${intro} ${detailsVie}`;
+  if (ame) phrase += " " + ame;
+  // Phrase non vide
+  if (phrase.length < 15) phrase += randomFrom([
+    "Je réfléchis à ce que je pourrais bien te raconter…",
+    "Tu veux que je te pose une question indiscrète ?",
+    "Tu fais quoi de beau en ce moment ?"
+  ]);
+  // Évite la répétition stricte
+  if (phrase === memory.ia.lastCamilleMsg) phrase += " (je radote un peu, désolée 🙈)";
+  memory.ia.lastCamilleMsg = phrase;
+  return phrase;
+}
   // --- Mini-jeu ou référence à souvenirs/anecdotes ---
   if (u.prenom && Math.random() < 0.06 && mood !== "neutre") {
     return randomFrom([
