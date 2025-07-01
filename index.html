@@ -1,16 +1,31 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Camille</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Camille - Chat Privé</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="chat-window"></div>
-  <div id="input-container">
-    <input id="user-input" type="text" placeholder="Écris ici..." />
-    <button id="send-button">Envoyer</button>
-    <button id="image-button">Voir Camille</button>
+  <div class="chat-container">
+    <header>
+      <div class="avatar-camille"></div>
+      <div>
+        <div class="chat-title">Camille</div>
+        <div class="chat-status" id="chat-status">● en ligne</div>
+      </div>
+      <div class="header-actions">
+        <button id="export-memory" title="Exporter la mémoire">&#128190;</button>
+        <button id="import-memory" title="Importer la mémoire">&#8682;</button>
+        <button id="generate-photo" title="Voir Camille">&#128247;</button>
+        <input type="file" id="import-file" accept=".json" style="display:none;">
+      </div>
+    </header>
+    <div id="chat-window" class="chat-window"></div>
+    <form id="chat-form" autocomplete="off">
+      <input type="text" id="user-input" placeholder="Écris un message..." maxlength="500" autocomplete="off"/>
+      <button type="submit" id="send-button">&#10148;</button>
+    </form>
   </div>
   <script src="script.js"></script>
 </body>
