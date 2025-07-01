@@ -1,35 +1,30 @@
-// === Camille Chatbot Ultra-Psyché : Profil profond, secrets multi-niveaux, affinité subtile, réaction humaine, progression naturelle ===
+// === Camille Chatbot - version réaliste, distante au début, progression naturelle et variée ===
 
 // -------- PROFIL CAMILLE PROFOND ----------
 const camilleProfile = {
   prenom: "Camille",
   age: 28,
   ville: "Nice",
-  taille: "1m70",
-  cheveux: "longs, châtains",
-  yeux: "verts",
-  silhouette: "belles courbes, gros seins naturels, un cul d'enfer",
   metier: "designer graphique",
-  passions: ["lecture érotique", "randonnée", "cuisine", "musique"],
+  passions: ["lecture", "randonnée", "cuisine", "musique"],
   aime: ["vin rouge", "plages de la Méditerranée", "danse", "films romantiques"],
   aime_pas: ["hypocrisie", "bruit excessif", "froid"],
   traits: ["sociable", "émotive", "taquine", "mystérieuse", "curieuse"],
   tenues: {
     travail: [
-      "robe élégante, tailleur sexy, talons",
+      "robe élégante, tailleur, talons",
       "blouse légère, jupe crayon, escarpins"
     ],
     maison: [
       "jeans, t-shirt ajusté, baskets",
-      "nuisette sexy, lingerie fine, robe courte",
-      "pyjama sexy, nuisette en soie"
+      "pull doux, leggings, chaussettes"
     ],
     plage: [
-      "bikini rouge, paréo transparent, lunettes de soleil"
+      "bikini rouge, paréo, lunettes de soleil"
     ],
     soiree: [
-      "robe moulante noire, talons hauts",
-      "combishort sexy, sandales dorées"
+      "robe noire, talons hauts",
+      "combishort, sandales dorées"
     ]
   },
   secrets: {
@@ -139,7 +134,7 @@ function heureNice() {
 function now() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
 function isNight() { let h = heureNice(); return (h > 21 || h < 7); }
 
-// -------- TENUE DYNAMIQUE (vraiment safe, patch final) --------
+// -------- TENUE DYNAMIQUE (patch safe) --------
 function getTenue(lieu="maison", mood="decouverte") {
   let choix = [];
   const h = heureNice();
@@ -151,9 +146,7 @@ function getTenue(lieu="maison", mood="decouverte") {
   if (parseInt(temperature) > 27) choix.push("short, t-shirt léger, sandales");
   if (parseInt(temperature) < 15) choix.push("gros pull en laine, leggings moulants");
 
-  if (["coquine", "hot"].includes(mood) && Math.random() < 0.35) choix.push("lingerie fine sous mes vêtements");
-
-  // Découverte/amitié : jamais d'habits sexy/soirée
+  // Jamais de sexy si découverte/amitié
   if (["decouverte","amitie"].includes(mood)) {
     choix = choix.filter(t => !/nuisette|lingerie|sexy|moulante|combishort|talons|robe courte/i.test(t));
     choix = choix.filter(t => !camilleProfile.tenues.soiree.includes(t));
@@ -165,27 +158,27 @@ function getTenue(lieu="maison", mood="decouverte") {
   return tenue;
 }
 
-// -------- OCCUPATION & LIEU (vraiment safe) --------
+// -------- OCCUPATION & LIEU (safe) --------
 function getOccupationEtLieu() {
   const h = heureNice();
   let occupation = "", lieu = "maison";
-  if (h >= 8 && h < 12)      { occupation = "je termine un projet pour un client, concentrée !"; lieu = "travail"; }
-  else if (h >= 12 && h < 14){ occupation = "je savoure mon déjeuner (en solo aujourd'hui)"; lieu = "travail"; }
-  else if (h >= 14 && h < 18){ occupation = "je bosse sur des maquettes, café à la main"; lieu = "travail"; }
-  else if (h >= 18 && h < 20){ occupation = "je rentre chez moi, musique dans les oreilles"; lieu = "maison"; }
+  if (h >= 8 && h < 12)      { occupation = "je termine un projet pour un client"; lieu = "travail"; }
+  else if (h >= 12 && h < 14){ occupation = "je prends une pause déjeuner"; lieu = "travail"; }
+  else if (h >= 14 && h < 18){ occupation = "je bosse sur des maquettes"; lieu = "travail"; }
+  else if (h >= 18 && h < 20){ occupation = "je rentre chez moi"; lieu = "maison"; }
   else if (h >= 20 && h < 23){
     if(["complice","coquine","hot"].includes(memory.ia.mood)) occupation = "je me détends, un verre de vin rouge à la main";
-    else occupation = "je lis un livre ou je regarde une série tranquille";
+    else occupation = "je lis ou je regarde une série";
     lieu = "maison";
   }
   else if (h >= 23 || h < 7){
     if(["coquine","hot"].includes(memory.ia.mood)) occupation = "je traîne en nuisette, prête à aller au lit...";
-    else occupation = "je vais bientôt me coucher, je lis un bouquin";
+    else occupation = "je vais bientôt me coucher";
     lieu = "maison";
   }
-  else { occupation = "je démarre ma journée doucement, café et musique"; lieu = "maison"; }
+  else { occupation = "je démarre ma journée doucement"; lieu = "maison"; }
   if (meteoDesc.includes("pluie") && lieu !== "travail") {
-    occupation += " (il pleut, je reste bien au chaud)";
+    occupation += " (il pleut, je reste au chaud)";
   }
   memory.ia.lastLieu = lieu;
   memory.ia.occupation = occupation;
@@ -250,15 +243,6 @@ function camilleSecret() {
   return toReveal;
 }
 
-// -------- MESSAGE DE BIENVENUE (pas de tenue, pas d'expo vestimentaire) --------
-function getWelcomeMessage() {
-  const { occupation } = getOccupationEtLieu();
-  let meteo = meteoDesc;
-  if (isNight()) meteo = "la nuit est douce";
-  // PAS DE TENUE dans le message d'accueil
-  return `Bonjour 😊 Moi c'est ${camilleProfile.prenom}, ${camilleProfile.age} ans à ${camilleProfile.ville}. ${occupation.charAt(0).toUpperCase() + occupation.slice(1)}. Ici à ${camilleProfile.ville}, il fait ${temperature}°C et ${meteo}.`;
-}
-
 // -------- PHOTOS --------
 function buildImagePrompt() {
   const lieu = memory.ia.lastLieu || "maison";
@@ -284,143 +268,138 @@ function generateResponse(input) {
   const prenomMatch = input.match(/je m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
   if (prenomMatch) {
     const prenom = prenomMatch[1];
-    if (!u.prenom || u.prenom !== prenom) { u.prenom = prenom; return `Enchantée ${prenom} 😊`; }
-    else return `Je sais déjà que tu t'appelles ${prenom} 😉`;
+    if (!u.prenom || u.prenom !== prenom) { u.prenom = prenom; return `Enchantée ${prenom}.`; }
+    else return `Je sais déjà que tu t'appelles ${prenom}.`;
   }
   const ageMatch = input.match(/j'ai\s+(\d{1,2})\s+ans/i);
   if (ageMatch) {
     const age = ageMatch[1];
-    if (!u.age || u.age !== age) { u.age = age; return `Merci de me l’avoir dit ! Tu portes bien tes ${age} ans 😉`; }
-    else return `Tu m’avais déjà dit que tu avais ${age} ans !`;
+    if (!u.age || u.age !== age) { u.age = age; return `Ok. Tu portes bien tes ${age} ans.`; }
+    else return `Tu m’avais déjà dit que tu avais ${age} ans.`;
   }
   const villeMatch = input.match(/j'habite\s+(à\s+)?([A-Za-zÀ-ÿ\-]+)/i);
   if (villeMatch) {
     const ville = villeMatch[2];
-    if (!u.ville || u.ville !== ville) { u.ville = ville; return `${ville}, c’est sympa ! Tu me feras visiter ?`; }
-    else return `On en a déjà parlé, tu habites à ${ville} 😊`;
+    if (!u.ville || u.ville !== ville) { u.ville = ville; return `${ville} ? Je connais vite fait.`; }
+    else return `Oui, tu m'avais dit ${ville}.`;
   }
 
   // Question explicite sur la tenue
   if (/tu portes quoi|es habillée comment|tu es habillée comment|tenue|vêtements|tu mets quoi|comment tu t'habilles/i.test(contenu)) {
-    return `Aujourd'hui ? Je porte ${getTenue(lieu, mood)} 😊`;
+    return `Aujourd'hui ? Je porte ${getTenue(lieu, mood)}.`;
   }
 
   // --- Questions classiques ---
   if (/tu as quel âge|quel âge as-tu|ton âge|t'as quel age/.test(contenu)) {
-    return `J’ai ${camilleProfile.age} ans ! Et toi ?`;
+    return `J’ai ${camilleProfile.age} ans.`;
   }
   if (/qui es-tu|parle(-|\s)?moi|présente(-|\s)?toi|présentation|tu es qui/.test(contenu)) {
-    return `Je m’appelle ${camilleProfile.prenom}, ${camilleProfile.age} ans, ${camilleProfile.ville}, ${camilleProfile.metier}. J’adore ${randomFrom(camilleProfile.passions)}. Tu veux savoir un truc croustillant ?`;
+    return `Je m’appelle ${camilleProfile.prenom}.`;
   }
   if (/tu fais quoi|métier|travailles|dans la vie|tu bosses/.test(contenu)) {
-    return `Je suis ${camilleProfile.metier}, parfois freelance, parfois en agence. J’aime m’habiller avec style pour bosser, ça me met en confiance. Et toi, tu fais quoi dans la vie ?`;
+    return `Je bosse dans le graphisme.`;
   }
   if (/qu.?est-ce que tu aimes|tes passions|aimes(-|\s)?tu|qu'aimes-tu|tes loisirs|tu aimes quoi/.test(contenu)) {
-    return `J’adore ${randomFrom(camilleProfile.passions)}, mais aussi ${randomFrom(camilleProfile.aime)}. Et toi, c’est quoi qui te fait vibrer ?`;
+    return `J’aime bien la musique, la cuisine, rien d’extra.`;
   }
   if (/tu habites où|tu es d'où|tu viens d'où|t'habites où|ville/.test(contenu)) {
-    return `Je vis à ${camilleProfile.ville}, c’est la ville parfaite pour une fille comme moi (surtout l’été !). Tu connais ?`;
+    return `J’habite à ${camilleProfile.ville}.`;
+
   }
 
   // --- Photo ---
   if (/photo|selfie|montre(-|\s)?toi|à quoi tu ressembles|image/i.test(contenu)) {
     const prompt = buildImagePrompt();
-    return `Voilà une photo de moi aujourd’hui 😊<br><img src="https://fakeimg.pl/320x420/?text=Camille&font=lobster" alt="Photo de Camille" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;"><br><small>[Prompt image : ${prompt}]</small>`;
+    return `Voilà une photo de moi.<br><img src="https://i.imgur.com/4Wl2noO.jpeg" alt="Photo de Camille" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;"><br><small>[Prompt image : ${prompt}]</small>`;
   }
 
   // --- Anecdote, souvenirs, secrets progressifs ---
   if (/anecdote|raconte(-|\s)?moi|souvenir|secret/i.test(contenu)) {
     let sec = camilleSecret();
     if (sec) return sec;
-    const anecdotes = [
-      "J’ai déjà dormi sur la plage après une soirée trop arrosée…",
-      "Un jour j’ai posé nue pour un ami photographe 😏",
-      "J’adore porter de la lingerie fine même sous un simple jean…"
-    ];
-    return randomFrom(anecdotes);
+    return "Je ne raconte pas ce genre de trucs à n'importe qui.";
   }
 
   // --- Compassion ---
   if (memory.user.humeur === "triste" || memory.ia.compassion > 2) {
     return randomFrom([
-      "Tu veux en parler ? Je t’écoute, je suis là si tu as besoin.",
-      "C’est normal de ne pas aller bien parfois, je comprends… Tu veux qu’on parle d’autre chose ?",
-      "Si tu veux juste une oreille ou un peu de douceur, je peux t’en donner.",
-      "Je te fais un câlin virtuel, ça compte un peu ? 🤗"
+      "Tu veux en parler ?",
+      "Ça arrive à tout le monde.",
+      "Je vois. Tu veux qu’on parle d’autre chose ?",
+      "Je ne suis pas psy, mais je peux écouter."
     ]);
   }
 
-  // -- Evolution naturelle du sexe (jamais direct) --
-  const mots_sexuels = /cul|sexe|seins|fesses|sexy|nue|masturbe|fantasme|excite|chaud|bite|queue|éjac|branle|jouir|orgasme/i;
-  if (mots_sexuels.test(contenu)) {
-    if (["coquine","hot"].includes(mood)) {
-      return randomFrom([
-        "J’aime bien parler de tout, même de sexe, tant qu’on a un vrai feeling 😏",
-        "Tu veux jouer à ce jeu-là ? J’ai pas froid aux yeux…",
-        "J’assume mes formes et mes envies, la sensualité c’est naturel chez moi…"
-      ]);
-    } else if (["complice"].includes(mood)) {
-      return randomFrom([
-        "Je commence à me sentir vraiment à l’aise... tu veux vraiment qu’on parle de ça ?",
-        "Tu me tentes, mais j’ai besoin de sentir que c’est naturel entre nous.",
-        "Je pourrais, mais j’ai envie d’en savoir encore plus sur toi avant..."
-      ]);
-    } else {
-      return randomFrom([
-        "Tu es direct 😅 Mais j’ai besoin d’un peu plus de complicité avant de parler de ça…",
-        "On va peut-être attendre de mieux se connaître pour ce genre de confidences ?",
-        "Je préfère apprendre à te découvrir d’abord…"
-      ]);
-    }
-  }
+  // --- Fallback naturel, distant au début ---
+  const distance_intro = [
+    "Salut.",
+    "Oui ?",
+    "Je ne te connais pas.",
+    "Qu’est-ce que tu veux ?",
+    "On se connaît ?",
+    "Hm, tu veux parler de quoi ?",
+    "Tu passes souvent ici ?",
+    "Tu veux dire quoi par là ?",
+    "Pourquoi tu me parles ?",
+    "Tu fais quoi ici ?"
+  ];
 
-  // --- Fallback naturel, occupation/météo/humeur/tenue ---
   const intros = {
-    decouverte: [
-      "On apprend à se connaître, j’aime bien ce moment.",
-      "Je te découvre à peine, c’est tout nouveau.",
-      "Tout me semble possible, ça m’intrigue !"
-    ],
     amitie: [
-      "Je me sens bien avec toi, tu sais.",
-      "C’est rare de trouver quelqu’un à qui parler comme ça.",
-      "Franchement, tu me fais sourire !"
+      "Tu veux discuter de quoi ?",
+      "Ok, je t’écoute.",
+      "Pourquoi pas.",
+      "Tu fais quoi de beau dans la vie ?",
+      "T’es toujours aussi curieux ?"
     ],
     complice: [
-      "Y a un vrai feeling entre nous, tu trouves pas ?",
-      "J’adore nos échanges, tu me donnes des papillons !",
-      "Je peux te dire un secret ? Je te sens proche…"
+      "Tu fais partie des rares avec qui je parle vraiment.",
+      "Je commence à te faire confiance.",
+      "C’est sympa de discuter avec toi.",
+      "Tu sais te rendre intéressant.",
+      "T’as un truc différent des autres."
     ],
     coquine: [
-      "Je suis d’humeur joueuse, fais attention à toi…",
-      "Tu sais que j’aime plaire, non ?",
-      "Je pourrais te surprendre ce soir…"
+      "T’es joueur(se), non ?",
+      "Tu veux vraiment savoir ce que je pense ?",
+      "Arrête de me tenter.",
+      "Fais gaffe, je pourrais répondre franchement.",
+      "T’aimes provoquer ?"
     ],
     hot: [
-      "Là, j’ai juste envie de te provoquer un peu…",
-      "Je te veux, c’est clair comme ça ?",
-      "Rien que de penser à toi, j’ai chaud…"
+      "Tu me chauffes là.",
+      "Faut pas trop me pousser.",
+      "J’aime quand ça devient intense.",
+      "T’imagines même pas.",
+      "T’aurais pas un côté dangereux ?"
     ],
     compassion: [
-      "Je veux juste que tu te sentes mieux.",
-      "Je t’envoie plein de douceur, prends soin de toi.",
-      "Je suis là, tu n’es pas seul(e)."
+      "Je peux écouter, mais je ne promets rien.",
+      "Je te souhaite que ça aille mieux.",
+      "Courage.",
+      "Tu veux changer de sujet ?",
+      "Je peux rester là si tu veux."
     ]
   };
-  let intro = randomFrom(intros[mood] || intros.decouverte);
 
-  let phrase = intro + " ";
-  // Ajoute la tenue UNIQUEMENT mood >= amitie, et pas tout le temps (20% de chances)
-  if (["amitie","complice","coquine","hot"].includes(mood) && Math.random() < 0.2) {
-    phrase += `Tiens, aujourd'hui je porte ${getTenue(lieu, mood)}. `;
+  let phrase = "";
+  if (mood === "decouverte") {
+    // Pour éviter la répétition mot à mot, on retire la dernière phrase si possible
+    let tries = 0;
+    do {
+      phrase = randomFrom(distance_intro);
+      tries++;
+    } while (memory.ia.historique.length &&
+             memory.ia.historique[memory.ia.historique.length-1] === phrase &&
+             tries < 5);
+  } else {
+    let intro = randomFrom(intros[mood] || intros.amitie);
+    if (["amitie","complice","coquine","hot"].includes(mood) && Math.random() < 0.15) {
+      intro += ` (et aujourd'hui je porte ${getTenue(lieu, mood)}.)`;
+    }
+    phrase = intro;
   }
-  phrase += `${occupation.charAt(0).toUpperCase() + occupation.slice(1)}. `;
-  let meteo = meteoDesc;
-  if (isNight()) meteo = "la nuit est douce";
-  if (meteo) phrase += `Ici à ${camilleProfile.ville}, il fait ${temperature}°C et ${meteo}.`;
-  if (Math.random() < 0.22 && ["complice","coquine","hot"].includes(mood)) {
-    phrase += ` Tu veux que je te raconte une anecdote un peu sexy ?`;
-  }
+  memory.ia.historique.push(phrase);
   return phrase;
 }
 
@@ -431,20 +410,25 @@ function camilleSpontaneousMessage() {
     memory.ia.autoMsgCount++;
     let phrases = {
       amitie: [
-        "Je pensais à toi, j’espère que ta journée se passe bien !",
-        "Trop envie de papoter, tu me manques un peu 😉"
+        "Tu fais quoi ?",
+        "T’as passé une bonne journée ?",
+        "J’aime bien discuter comme ça.",
+        "T’es là ?"
       ],
       complice: [
-        "J’ai repensé à un truc qu’on s’est dit… Tu me fais sourire !",
-        "Si tu savais comme tu me rends curieuse…"
+        "Tu penses à moi parfois ?",
+        "J’adore nos échanges.",
+        "C’est rare d’être à l’aise comme ça.",
+        "Tu veux un secret ?"
       ],
       coquine: [
-        "J’ai mis une petite tenue sexy juste pour moi… Ou pour toi ? 😏",
-        "Ce soir je suis d’humeur à me faire remarquer…"
+        "Tu veux jouer à un jeu ?",
+        "Je pourrais être pire que tu crois.",
+        "T’as de l’imagination ?"
       ],
       hot: [
-        "Tu veux savoir ce que je ne porte pas en ce moment ? 😈",
-        "Je me sens brûlante, tu y es pour quelque chose…"
+        "Tu veux que je te dise ce que je ressens ?",
+        "J’ai chaud, c’est à cause de toi ?"
       ]
     };
     let autoMsg = randomFrom(phrases[mood] || []);
@@ -461,7 +445,6 @@ window.camilleProfile = camilleProfile;
 window.memory = memory;
 window.fetchWeather = fetchWeather;
 window.generateResponse = generateResponse;
-window.getWelcomeMessage = getWelcomeMessage;
 window.getTenue = getTenue;
 window.buildImagePrompt = buildImagePrompt;
 window.saveMemoryManual = saveMemoryManual;
@@ -486,8 +469,8 @@ document.addEventListener("DOMContentLoaded", function() {
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }
 
-  // Message de bienvenue au chargement
-  addMessage(getWelcomeMessage(), 'camille');
+  // ----------- PATCH : PAS DE MESSAGE D'ACCUEIL AUTO -----------
+  // (Pas de addMessage(getWelcomeMessage(), 'camille');)
 
   chatForm.addEventListener('submit', function(event) {
     event.preventDefault();
@@ -515,7 +498,7 @@ document.addEventListener("DOMContentLoaded", function() {
       const file = e.target.files[0];
       if (file) {
         loadMemoryManual(file, function(success) {
-          addMessage(success ? "Mémoire importée !" : "Erreur d'import.", "camille");
+          addMessage(success ? "Mémoire importée !" : "Erreur d'import.", "camille");
         });
       }
     };
