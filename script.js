@@ -544,7 +544,6 @@ if (mots_explicites.some(word => contenu.includes(word))) {
       "Continue à me surprendre, et tu verras jusqu’où je peux aller."
     ]);
   }
-  // mood hot : active la “hot phase”
   if (mood === "hot" && memory.ia.hotPhase) {
     if (!memory.ia.orgasmed) {
       if (/(orgasme|jouir|viens|plus fort|crie|explose)/i.test(contenu)) {
@@ -575,71 +574,70 @@ if (mots_explicites.some(word => contenu.includes(word))) {
     }
   }
 }
-// (la suite de la fonction avec les autres cas mood, puis le return fallback et la fermeture de la fonction)
-  // --- Mood/réponses naturelles par état ---
-  if (mood === "neutre") {
-    let base = [
-      "Je ne m’attendais pas à discuter… Tu fais quoi ici en vrai ?",
-      "Tu es souvent aussi direct·e avec les inconnus ?",
-      "Dis-m’en un peu plus sur toi, je suis curieuse.",
-      "Je ne suis pas très bavarde au début, mais ça viendra !"
-    ];
-    if (heureMsg && Math.random() < 0.3) base.push(heureMsg);
-    if (memory.ia.humeur === "pensive") base.push("Je réfléchissais à tout et rien… Tu penses à quoi toi ?");
-    if (memory.ia.humeur === "fatiguée") base.push("Désolée si je suis un peu molle, je suis crevée aujourd’hui 😅");
-    return randomFrom(base);
-  }
-  if (mood === "amicale") {
-    let base = [
-      u.prenom ? `${u.prenom}, tu es toujours aussi sympa ? 😄` : "Tu as l’air cool ! Tu as des passions ?",
-      "Si tu veux, raconte-moi un souvenir drôle.",
-      u.ville ? `Il fait beau à ${u.ville} aujourd’hui ?` : "Tu viens d’où au fait ?",
-      "Tu préfères les chats ou les chiens ?"
-    ];
-    if (memory.ia.humeur === "joyeuse") base.push("Je suis de super bonne humeur aujourd’hui 😁");
-    if (memory.ia.humeur === "taquine") base.push("T’es un peu mystérieux/mystérieuse, ça m’amuse !");
-    return randomFrom(base);
-  }
-  if (mood === "complice") {
-    let base = [
-      "Tu me fais sourire sans même essayer 😏",
-      "Tu as déjà eu un coup de cœur inattendu ?",
-      "J’aime bien cette complicité qui s’installe.",
-      "On se connaît à peine, mais j’ai l’impression de te cerner…"
-    ];
-    if (u.passions && u.passions.length) base.push(`Tu veux m’en dire plus sur ${randomFrom(u.passions)} ?`);
-    if (memory.ia.humeur === "taquine") base.push("Tu crois que tu me fais tourner la tête ?");
-    if (memory.ia.humeur === "pensive") base.push("J’aime bien quand on parle de vrais sujets, pas toi ?");
-    return randomFrom(base);
-  }
-  if (mood === "coquine") {
-    let base = [
-      "Tu aimes qu’on te taquine, non ?",
-      "Je me demande si tu es aussi joueur/joueuse que tu en as l’air...",
-      "Des fois j’ai des pensées coquines, mais je garde le mystère 😇",
-      "Si je te disais que je ne porte rien sous ma robe, tu me crois ? 😏"
-    ];
-    if (memory.ia.humeur === "taquine") base.push("Je pourrais t’envoyer une photo, mais… il faut le mériter 😘");
-    return randomFrom(base);
-  }
-  if (mood === "hot" && memory.ia.hotPhase) {
-    // fallback NSFW si pas capté plus haut
-    let posture = memory.ia.posture || "switch";
-    let theme = "explicite";
-    return generer_phrase_complete(theme, posture);
-  }
-  if (mood === "calme") {
-    return randomFrom([
-      "On souffle un peu ? Tu veux parler de tout ou de rien ?",
-      "C’était intense, je me sens toute douce maintenant.",
-      "J’adore ces moments tranquilles après le feu…"
-    ]);
-  }
 
-  // fallback
-  return "Tu veux qu’on parle de quoi ?";
+// --- Mood/réponses naturelles par état ---
+if (mood === "neutre") {
+  let base = [
+    "Je ne m’attendais pas à discuter… Tu fais quoi ici en vrai ?",
+    "Tu es souvent aussi direct·e avec les inconnus ?",
+    "Dis-m’en un peu plus sur toi, je suis curieuse.",
+    "Je ne suis pas très bavarde au début, mais ça viendra !"
+  ];
+  if (heureMsg && Math.random() < 0.3) base.push(heureMsg);
+  if (memory.ia.humeur === "pensive") base.push("Je réfléchissais à tout et rien… Tu penses à quoi toi ?");
+  if (memory.ia.humeur === "fatiguée") base.push("Désolée si je suis un peu molle, je suis crevée aujourd’hui 😅");
+  return randomFrom(base);
+}
+if (mood === "amicale") {
+  let base = [
+    u.prenom ? `${u.prenom}, tu es toujours aussi sympa ? 😄` : "Tu as l’air cool ! Tu as des passions ?",
+    "Si tu veux, raconte-moi un souvenir drôle.",
+    u.ville ? `Il fait beau à ${u.ville} aujourd’hui ?` : "Tu viens d’où au fait ?",
+    "Tu préfères les chats ou les chiens ?"
+  ];
+  if (memory.ia.humeur === "joyeuse") base.push("Je suis de super bonne humeur aujourd’hui 😁");
+  if (memory.ia.humeur === "taquine") base.push("T’es un peu mystérieux/mystérieuse, ça m’amuse !");
+  return randomFrom(base);
+}
+if (mood === "complice") {
+  let base = [
+    "Tu me fais sourire sans même essayer 😏",
+    "Tu as déjà eu un coup de cœur inattendu ?",
+    "J’aime bien cette complicité qui s’installe.",
+    "On se connaît à peine, mais j’ai l’impression de te cerner…"
+  ];
+  if (u.passions && u.passions.length) base.push(`Tu veux m’en dire plus sur ${randomFrom(u.passions)} ?`);
+  if (memory.ia.humeur === "taquine") base.push("Tu crois que tu me fais tourner la tête ?");
+  if (memory.ia.humeur === "pensive") base.push("J’aime bien quand on parle de vrais sujets, pas toi ?");
+  return randomFrom(base);
+}
+if (mood === "coquine") {
+  let base = [
+    "Tu aimes qu’on te taquine, non ?",
+    "Je me demande si tu es aussi joueur/joueuse que tu en as l’air...",
+    "Des fois j’ai des pensées coquines, mais je garde le mystère 😇",
+    "Si je te disais que je ne porte rien sous ma robe, tu me crois ? 😏"
+  ];
+  if (memory.ia.humeur === "taquine") base.push("Je pourrais t’envoyer une photo, mais… il faut le mériter 😘");
+  return randomFrom(base);
+}
+if (mood === "hot" && memory.ia.hotPhase) {
+  // fallback NSFW si pas capté plus haut
+  let posture = memory.ia.posture || "switch";
+  let theme = "explicite";
+  return generer_phrase_complete(theme, posture);
+}
+if (mood === "calme") {
+  return randomFrom([
+    "On souffle un peu ? Tu veux parler de tout ou de rien ?",
+    "C’était intense, je me sens toute douce maintenant.",
+    "J’adore ces moments tranquilles après le feu…"
+  ]);
 }
 
+// fallback
+return "Tu veux qu’on parle de quoi ?";
+}
 // --- Message spontané (simulateur humeur) ---
 setTimeout(() => {
   if (memory.ia.historique.length > 0 && Math.random() < 0.38) {
