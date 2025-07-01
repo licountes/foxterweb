@@ -134,44 +134,56 @@ function loadMemoryManual(file, callback) {
 // -------- UTILITAIRES --------
 function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-// Heure locale Nice (précise)
+// Heure locale Nice (corrigé)
 function heureNice() {
-  // Fuseau Europe/Paris (Nice)
   const now = new Date();
   return new Date(now.toLocaleString("en-US", { timeZone: "Europe/Paris" })).getHours();
 }
 function now() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
 function isNight() { let h = heureNice(); return (h > 21 || h < 7); }
 
-// -------- TENUE DYNAMIQUE --------
+// -------- TENUE DYNAMIQUE (corrigé pour éviter sexy au début) --------
 function getTenue(lieu="maison", mood="decouverte") {
   let choix = [];
   const h = heureNice();
   if (lieu === "travail") choix = camilleProfile.tenues.travail;
   else if (lieu === "plage") choix = camilleProfile.tenues.plage;
-  else if (lieu === "soiree" || (h > 19 && h < 23)) choix = camilleProfile.tenues.soiree;
+  else if (lieu === "soiree" && ["complice","coquine","hot"].includes(mood)) choix = camilleProfile.tenues.soiree;
   else choix = camilleProfile.tenues.maison;
   // Météo
-  if (parseInt(temperature) > 27) choix.push("short ultra court, top transparent, sandales");
+  if (parseInt(temperature) > 27) choix.push("short, t-shirt léger, sandales");
   if (parseInt(temperature) < 15) choix.push("gros pull en laine, leggings moulants");
   // Sexy selon mood (plus rare désormais)
   if (["coquine", "hot"].includes(mood) && Math.random() < 0.35) choix.push("lingerie fine sous mes vêtements");
+  // En mode découverte/amitie : jamais de nuisette, lingerie, sexy, moulant, combishort, talons, robe courte
+  if (["decouverte","amitie"].includes(mood)) {
+    choix = choix.filter(t => !/nuisette|lingerie|sexy|moulante|combishort|talons|robe courte/i.test(t));
+    if (choix.length === 0) choix = ["jeans, t-shirt ajusté, baskets"];
+  }
   let tenue = randomFrom(choix);
   if (tenue === memory.ia.lastTenue) tenue = randomFrom(choix);
   memory.ia.lastTenue = tenue;
   return tenue;
 }
 
-// -------- OCCUPATION & LIEU --------
+// -------- OCCUPATION & LIEU (corrigé pour éviter "verre de vin"/"nuisette" au début) --------
 function getOccupationEtLieu() {
   const h = heureNice();
   let occupation = "", lieu = "maison";
-  if (h >= 8 && h < 12) { occupation = "je termine un projet pour un client, concentrée !"; lieu = "travail"; }
-  else if (h >= 12 && h < 14) { occupation = "je savoure mon déjeuner (en solo aujourd'hui)"; lieu = "travail"; }
-  else if (h >= 14 && h < 18) { occupation = "je bosse sur des maquettes, café à la main"; lieu = "travail"; }
-  else if (h >= 18 && h < 20) { occupation = "je rentre chez moi, musique dans les oreilles"; lieu = "maison"; }
-  else if (h >= 20 && h < 23) { occupation = "je me détends, un verre de vin rouge à la main"; lieu = "maison"; }
-  else if (h >= 23 || h < 7) { occupation = "je traîne en nuisette, prête à aller au lit..."; lieu = "maison"; }
+  if (h >= 8 && h < 12)      { occupation = "je termine un projet pour un client, concentrée !"; lieu = "travail"; }
+  else if (h >= 12 && h < 14){ occupation = "je savoure mon déjeuner (en solo aujourd'hui)"; lieu = "travail"; }
+  else if (h >= 14 && h < 18){ occupation = "je bosse sur des maquettes, café à la main"; lieu = "travail"; }
+  else if (h >= 18 && h < 20){ occupation = "je rentre chez moi, musique dans les oreilles"; lieu = "maison"; }
+  else if (h >= 20 && h < 23){
+    if(["complice","coquine","hot"].includes(memory.ia.mood)) occupation = "je me détends, un verre de vin rouge à la main";
+    else occupation = "je lis un livre ou je regarde une série tranquille";
+    lieu = "maison";
+  }
+  else if (h >= 23 || h < 7){
+    if(["coquine","hot"].includes(memory.ia.mood)) occupation = "je traîne en nuisette, prête à aller au lit...";
+    else occupation = "je vais bientôt me coucher, je lis un bouquin";
+    lieu = "maison";
+  }
   else { occupation = "je démarre ma journée doucement, café et musique"; lieu = "maison"; }
   if (meteoDesc.includes("pluie") && lieu !== "travail") {
     occupation += " (il pleut, je reste bien au chaud)";
@@ -250,10 +262,7 @@ function camilleSecret() {
 function getWelcomeMessage() {
   const { occupation, lieu } = getOccupationEtLieu();
   let meteo = meteoDesc;
-  let heure = heureNice();
-  if (isNight()) {
-    meteo = "la nuit est douce";
-  }
+  if (isNight()) meteo = "la nuit est douce";
   return `Coucou, moi c'est ${camilleProfile.prenom} 😘 J’ai ${camilleProfile.age} ans, je vis à ${camilleProfile.ville}. Aujourd’hui je porte ${getTenue(lieu)}. ${occupation}. Ici à ${camilleProfile.ville}, il fait ${temperature}°C et ${meteo}.`;
 }
 
@@ -269,7 +278,7 @@ function buildImagePrompt() {
   return prompt;
 }
 
-// -------- GÉNÉRATION DE RÉPONSES --------
+// -------- GÉNÉRATION DE RÉPONSES (corrigé pour ne pas teaser trop vite) --------
 function generateResponse(input) {
   const u = memory.user;
   const contenu = input.toLowerCase();
@@ -407,11 +416,12 @@ function generateResponse(input) {
   phrase += `Aujourd’hui je porte ${getTenue(lieu, mood)}. `;
   phrase += `${occupation}. `;
   let meteo = meteoDesc;
-  if (isNight()) {
-    meteo = "la nuit est douce";
-  }
+  if (isNight()) meteo = "la nuit est douce";
   if (meteo) phrase += `Ici à ${camilleProfile.ville}, il fait ${temperature}°C et ${meteo}.`;
-  if (Math.random() < 0.22 && ["complice","coquine","hot"].includes(mood)) phrase += ` Tu veux que je te raconte une anecdote un peu sexy ?`;
+  // Jamais d'anecdote sexy/sous-entendu en mood découverte/amitie
+  if (Math.random() < 0.22 && ["complice","coquine","hot"].includes(mood)) {
+    phrase += ` Tu veux que je te raconte une anecdote un peu sexy ?`;
+  }
   return phrase;
 }
 
