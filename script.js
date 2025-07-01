@@ -1,12 +1,63 @@
-// === Camille Chat Script v4.0 ===
-// Avec souvenirs, gestion heure/silence, humeur, langage évolutif, initiative, mini-jeux subtils, NSFW réaliste, phrases naturelles
+// === Camille Chat Script v5.1 ===
+// Bloc 1/3 : Bibliothèque hot, utilitaires, mémoire, UI, setup
+
+// ======= Bibliothèque de mots hot, classée par thème/posture =======
+const mots_hot = {
+    "teasing": {
+        "dominante": {...},
+        "soumise": {...},
+        "switch": {...}
+    },
+    "explicite": {
+        "dominante": {...},
+        "soumise": {...},
+        "switch": {...}
+    },
+    "roleplay": {
+        "dominante": {...},
+        "soumise": {...},
+        "switch": {...}
+    },
+    "dirty_talk": {
+        "dominante": {...},
+        "soumise": {...},
+        "switch": {...}
+    }
+};
+// (Par souci de lisibilité ici, remplace {...} par le contenu complet de chaque objet comme dans ton script précédent.)
+
+const mots_explicites = [
+    "chatte", "cul", "seins", "bite", "queue", "pénétrer", "foutre", "enculer",
+    "sucer", "claquer", "mordre", "forcer", "prise", "salopes", "jouir", "cogne",
+    "squirt", "ejac", "sperme", "branler", "gode", "vibrer", "baiser", "baiser",
+    "dildo", "capote", "préservatif", "fellation", "gémir", "mordre", "masturbation",
+    "orgasme", "plaisir", "tétine", "clitoris", "cuisses", "fesses", "bouche",
+    "toucher", "caresser", "mordre", "embrasser", "pénétration", "sexe",
+    "lécher", "sodomie", "putain", "pute", "nique", "branlette", "pipi",
+    "trancher", "sodomiser", "gouine", "tapiner", "péter", "fourrer", "épier",
+    "douleur", "extase", "teasing", "soumise", "dominante", "bondage", "fessée",
+    "collier", "menottes", "gode-ceinture"
+];
+
+// Fonction de génération de phrase hot complète
+function generer_phrase_complete(theme, posture) {
+    const corps = randomFrom(mots_hot[theme][posture]["corps"]);
+    const verbe = randomFrom(mots_hot[theme][posture]["verbes"]);
+    const adjectif = randomFrom(mots_hot[theme][posture]["adjectifs"]);
+    const intensite = randomFrom(mots_hot[theme][posture]["intensites"]);
+    const expression = randomFrom(mots_hot[theme][posture]["expressions"]);
+    return (
+        `Je sens ton ${corps} ${adjectif} qui ${verbe} ${intensite}, et je te dis : ${expression}.`
+    );
+}
 
 const PROFILE_URL = "profil_camille.json";
 const AVATAR_URL = "https://i.imgur.com/4Wl2noO.jpeg";
-const MEMORY_KEY = "camille_memory_v4";
+const MEMORY_KEY = "camille_memory_v5";
 const MEMORY_EXPORT_FILENAME = "camille_memory.json";
 const WEATHER_API = "https://wttr.in/Nice?format=%t";
 
+// --- DOM
 const chatWindow = document.getElementById("chat-window");
 const userInput = document.getElementById("user-input");
 const chatForm = document.getElementById("chat-form");
@@ -53,7 +104,7 @@ function createMemory() {
       hotPhase: false,
       orgasmed: false,
       miniGame: null,
-      humeur: "normale", // normale, joyeuse, pensive, taquine, fatiguée
+      humeur: "normale",
       souvenirs: [],
       nSilence: 0
     }
@@ -133,6 +184,72 @@ function replayHistory() {
   }
 }
 
+// --- Bloc 2/3 à suivre ---
+// === Camille Chat Script v5.1 ===
+// Bloc 2/3 : extraction infos user, affinité, moods, silences, mini-jeux, génération réponse, photos
+
+// --- Extraction infos utilisateur ---
+function updateUserInfo(text) {
+  const prenomMatch = text.match(/m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
+  if (prenomMatch) memory.user.prenom = prenomMatch[1];
+  const ageMatch = text.match(/j'ai\s+(\d{1,2})\s+ans/i);
+  if (ageMatch) memory.user.age = ageMatch[1];
+  const villeMatch = text.match(/j'habite\s+(à\s+)?([A-Za-zÀ-ÿ\-]+)/i);
+  if (villeMatch) memory.user.ville = villeMatch[2] || villeMatch[1];
+  const passionsMatch = text.match(/j'aime\s+(.+?)(\.|$)/i);
+  if (passionsMatch) {
+    memory.user.passions = passionsMatch[1].split(",").map(x => x.trim());
+  }
+  const metierMatch = text.match(/je suis (.+?)(\.|$)/i);
+  if (metierMatch && !/m'appelle/.test(text)) {
+    memory.user.metier = metierMatch[1].trim();
+  }
+  if (/je n'aime pas|j'aime pas/i.test(text)) {
+    const dislikes = text.replace(/.*je n'aime pas|.*j'aime pas/i, '').split(/[,.]/).map(s=>s.trim()).filter(Boolean);
+    if (!memory.user.dislikes) memory.user.dislikes = [];
+    memory.user.dislikes.push(...dislikes);
+  }
+  if (/quand j'étais|j'ai déjà|souvenir|anecdote|une fois/i.test(text)) {
+    memory.user.anecdotes.push(text);
+  }
+}
+
+// --- Affinité, mood & progression humaine ---
+function incrementAffinite(text) {
+  let delta = 1;
+  if (/j'aime|mes passions|mon rêve|ma vie/i.test(text)) delta++;
+  if (/tu es jolie|je te trouve belle|t'es canon|ravissante|magnifique/i.test(text)) delta++;
+  if (/oserai|oserais|fantasme|secret|envie de toi|je te veux|tu me plais/i.test(text)) delta += 2;
+  if (/quand j'étais|souvenir|une fois|anecdote/i.test(text)) delta++;
+  memory.ia.affinite += delta;
+  const msgCount = memory.ia.historique.filter(m => m.sender === "user").length + 1;
+  let moodProgress = "neutre";
+  if (msgCount > 4) moodProgress = "amicale";
+  if (msgCount > 10) moodProgress = "complice";
+  if (msgCount > 20) moodProgress = "coquine";
+  if (msgCount > 34 && memory.ia.consentHot) moodProgress = "hot";
+  memory.ia.mood = moodProgress;
+  if (!memory.ia.consentHot && moodProgress === "coquine" && mots_explicites.some(word => text.toLowerCase().includes(word))) {
+    memory.ia.consentHot = true;
+    memory.ia.hotPhase = true;
+    memory.ia.affinite += 4;
+  }
+  if (memory.ia.orgasmed && !mots_explicites.some(word => text.toLowerCase().includes(word))) {
+    memory.ia.hotPhase = false;
+    memory.ia.mood = "complice";
+    memory.ia.orgasmed = false;
+  }
+}
+
+// --- Message d'accueil naturel ---
+function getStartupMessage() {
+  const heure = (new Date()).getHours();
+  if (heure < 10) return "Oh… Tu es matinal·e ☀️ Je m’attendais pas à te croiser ici, tu bois un café ?";
+  if (heure < 17) return "Oh… Salut 😯 Tu m’as prise par surprise… On ne se connaît pas, non ?";
+  if (heure < 22) return "Bonsoir… Je ne pensais pas papoter si tard 😊 Tu veux te présenter ?";
+  return "Tu ne dors pas ? 😏 Je ne connais même pas ton prénom…";
+}
+
 // --- Envoi message utilisateur ---
 chatForm.onsubmit = (e) => {
   e.preventDefault();
@@ -156,73 +273,134 @@ function handleUserMessage(text) {
   silenceTimer = setTimeout(() => checkSilence(), 60000);
 }
 
-// --- Extraction infos utilisateur ---
-function updateUserInfo(text) {
-  const prenomMatch = text.match(/m'appelle\s+([A-Za-zÀ-ÿ\-]+)/i);
-  if (prenomMatch) memory.user.prenom = prenomMatch[1];
-  const ageMatch = text.match(/j'ai\s+(\d{1,2})\s+ans/i);
-  if (ageMatch) memory.user.age = ageMatch[1];
-  const villeMatch = text.match(/j'habite\s+(à\s+)?([A-Za-zÀ-ÿ\-]+)/i);
-  if (villeMatch) memory.user.ville = villeMatch[2] || villeMatch[1];
-  const passionsMatch = text.match(/j'aime\s+(.+?)(\.|$)/i);
-  if (passionsMatch) {
-    memory.user.passions = passionsMatch[1].split(",").map(x => x.trim());
+// --- Silences ---
+function checkSilence() {
+  let lastUser = null;
+  for (let i = memory.ia.historique.length-1; i>=0; i--) {
+    if (memory.ia.historique[i].sender === "user") {
+      lastUser = memory.ia.historique[i];
+      break;
+    }
   }
-  const metierMatch = text.match(/je suis (.+?)(\.|$)/i);
-  if (metierMatch && !/m'appelle/.test(text)) {
-    memory.user.metier = metierMatch[1].trim();
+  if (!lastUser) return;
+  const lastTime = parseTime(lastUser.time);
+  const now = new Date();
+  const minutes = (now.getHours()*60+now.getMinutes()) - (lastTime.getHours()*60+lastTime.getMinutes());
+  if (minutes > 7 && minutes < 120 && memory.ia.nSilence < 2) {
+    addMessage("camille", randomFrom([
+      "Tu es là ? Je me demandais si je t’avais saoulé 😅",
+      "Je t’ai perdu ? Parfois je suis trop bavarde !",
+      "Si tu es là, fais-moi signe 😘"
+    ]));
+    memory.ia.nSilence++;
+    saveMemory();
   }
-  if (/je n'aime pas|j'aime pas/i.test(text)) {
-    const dislikes = text.replace(/.*je n'aime pas|.*j'aime pas/i, '').split(/[,.]/).map(s=>s.trim()).filter(Boolean);
-    if (!memory.user.dislikes) memory.user.dislikes = [];
-    memory.user.dislikes.push(...dislikes);
-  }
-  // Anecdote ou souvenir
-  if (/quand j'étais|j'ai déjà|souvenir|anecdote|une fois/i.test(text)) {
-    memory.user.anecdotes.push(text);
+}
+function parseTime(str) {
+  if (!str) return new Date();
+  const [h,m]=str.split(":").map(Number);
+  let d = new Date();
+  d.setHours(h); d.setMinutes(m); d.setSeconds(0);
+  return d;
+}
+
+// --- Mémoire résumée auto ---
+function handleMemorySummary() {
+  if (memory.ia.historique.length > 220) {
+    memory.ia.historique = memory.ia.historique.slice(-110);
+    memory.ia.affinite = Math.max(memory.ia.affinite - 2, 0);
+    saveMemory();
   }
 }
 
-// --- Affinité, mood & progression humaine ---
-function incrementAffinite(text) {
-  let delta = 1;
-  if (/j'aime|mes passions|mon rêve|ma vie/i.test(text)) delta++;
-  if (/tu es jolie|je te trouve belle|t'es canon|ravissante|magnifique/i.test(text)) delta++;
-  if (/oserai|oserais|fantasme|secret|envie de toi|je te veux|tu me plais/i.test(text)) delta += 2;
-  if (/quand j'étais|souvenir|une fois|anecdote/i.test(text)) delta++;
-  memory.ia.affinite += delta;
-  const msgCount = memory.ia.historique.filter(m => m.sender === "user").length + 1;
-  let moodProgress = "neutre";
-  if (msgCount > 4) moodProgress = "amicale";
-  if (msgCount > 10) moodProgress = "complice";
-  if (msgCount > 20) moodProgress = "coquine";
-  if (msgCount > 34 && memory.ia.consentHot) moodProgress = "hot";
-  memory.ia.mood = moodProgress;
-  // Consentement hot si l'utilisateur a fait plusieurs flirts explicites alors que mood coquine
-  if (!memory.ia.consentHot && moodProgress === "coquine" && /(seins|cul|nue|je te veux|viens dans mon lit|je bande|tu mouilles|tous nue)/i.test(text)) {
-    memory.ia.consentHot = true;
-    memory.ia.hotPhase = true;
-    memory.ia.affinite += 4;
+// --- Mini-jeu ---
+
+function tryMiniJeu(msgCount, mood) {
+  if (!memory.ia.miniGame && (mood === "amicale" || mood === "complice") && Math.random() < 0.08 && msgCount > 6) {
+    memory.ia.miniGame = "2verites1mensonge";
+    return "On fait un petit jeu ? Je te propose '2 vérités, 1 mensonge' : je te dis trois trucs sur moi, à toi de deviner lequel est faux !";
   }
-  // Orgasme reset
-  if (memory.ia.orgasmed && !/(seins|cul|baiser|bite|branler|jouir|chatte|nu(e)?|orgasme|excite|salope|sensuelle|baise|porn|sucer|fesses|masturbe)/i.test(text)) {
-    memory.ia.hotPhase = false;
-    memory.ia.mood = "complice";
-    memory.ia.orgasmed = false;
+  if (memory.ia.miniGame === "2verites1mensonge") {
+    memory.ia.miniGame = null;
+    return randomFrom([
+      "1) J’ai déjà dormi sur la plage. 2) J’ai une phobie des serpents. 3) J’ai fait du parachute. À ton avis, c’est quoi le mensonge ? 😏",
+      "1) J’adore le chocolat. 2) Je parle trois langues. 3) J’ai jamais vu la neige. Lequel tu paries est faux ?"
+    ]);
   }
+  return null;
 }
 
-// --- Message d'accueil naturel ---
-function getStartupMessage() {
+// --- Génération d'image/photo ---
+generatePhotoBtn.onclick = () => {
+  const prompt = buildImagePrompt();
+  let phrase = "";
+  if (memory.ia.mood === "hot" && memory.ia.hotPhase) {
+    phrase = "😈 Je t'envoie une photo très intime... Garde-la pour toi.";
+  } else if (memory.ia.mood === "coquine") {
+    phrase = "Voilà une photo un peu sexy, mais pas trop 😇";
+  } else {
+    phrase = "Voilà un petit selfie pour toi !";
+  }
+  addMessage("camille", phrase + "<br><img src='https://fakeimg.pl/320x420/?text=Camille&font=lobster' alt='Photo de Camille' style='margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;'>");
+  memory.ia.historique.push({ sender:"camille", msg: `[Prompt photo généré: ${prompt}]`, time: getTime() });
+  saveMemory();
+};
+function buildImagePrompt() {
+  const last20 = memory.ia.historique.slice(-20).map(e=>e.msg).join(" ").toLowerCase();
+  let prompt = "28yo french woman, brunette, green eyes, natural breast, beautiful curves, like https://i.imgur.com/4Wl2noO.jpeg, ";
+  let tenue = getTenue();
+  if (memory.ia.mood === "hot" && memory.ia.hotPhase) {
+    prompt += "nude, ";
+  } else if (memory.ia.mood === "coquine") {
+    prompt += "lingerie, ";
+  } else {
+    prompt += tenue + ", ";
+  }
+  prompt += "realistic selfie, dslr, soft lighting, bedroom, ";
+  prompt += `mood: ${memory.ia.mood}, `;
+  prompt += `weather: ${temperature}, `;
   const heure = (new Date()).getHours();
-  if (heure < 10) return "Oh… Tu es matinal·e ☀️ Je m’attendais pas à te croiser ici, tu bois un café ?";
-  if (heure < 17) return "Oh… Salut 😯 Tu m’as prise par surprise… On ne se connaît pas, non ?";
-  if (heure < 22) return "Bonsoir… Je ne pensais pas papoter si tard 😊 Tu veux te présenter ?";
-  return "Tu ne dors pas ? 😏 Je ne connais même pas ton prénom…";
+  if (heure < 10) prompt += "morning, ";
+  else if (heure < 18) prompt += "afternoon, ";
+  else prompt += "evening, ";
+  if (memory.ia.mood === "hot" && memory.ia.hotPhase) prompt += "nsfw, explicit, erotic, ";
+  else prompt += "not nsfw, ";
+  return prompt.trim();
+}
+function getTenue() {
+  const heure = (new Date()).getHours();
+  const mood = memory.ia.mood;
+  const meteo = parseInt(temperature)||22;
+  let options;
+  if (mood === "hot" && memory.ia.hotPhase) return "naked";
+  if (mood === "coquine") options = ["lingerie fine", "nuisette transparente", "culotte et t-shirt large"];
+  else if (mood === "complice") options = ["jupe courte et débardeur", "robe moulante", "jean moulant et petit haut"];
+  else if (mood === "amicale") options = ["jean et t-shirt", "short et débardeur", "robe simple"];
+  else options = ["jeans et pull", "vêtements classiques", "robe élégante"];
+  if (heure > 21) options.push("pyjama sexy", "nuisette en soie");
+  if (meteo > 26) options.push("robe légère", "short et top fin");
+  if (meteo < 16) options.push("gros pull", "leggins, sweat ample");
+  return randomFrom(options);
 }
 
-// --- Génération réponse Camille ---
-// Comportement évolutif, humain, souvenirs, humeur, mini-jeux
+// --- Outils ---
+function getTime() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function randomFrom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+exportBtn.onclick = () => exportMemory();
+importBtn.onclick = () => importFile.click();
+importFile.onchange = e => {
+  if (e.target.files.length) importMemoryFromFile(e.target.files[0]);
+};
+
+// --- Bloc 3/3 : génération réponse Camille (toutes moods, souvenirs, jeux, hot etc.) ---
+// === Camille Chat Script v5.1 ===
+// Bloc 3/3 : génération des réponses Camille (tous moods, souvenirs, mini-jeux, hot, etc.)
+
 function generateResponse(input) {
   const mood = memory.ia.mood;
   const u = memory.user;
@@ -235,24 +413,16 @@ function generateResponse(input) {
     const humeurs = ["normale","joyeuse","pensive","taquine","fatiguée"];
     memory.ia.humeur = randomFrom(humeurs);
   }
+
   // --- Gestion du temps (heure) ---
   const heure = (new Date()).getHours();
   let heureMsg = "";
   if (heure < 7) heureMsg = "Tu dors jamais, toi ?";
   else if (heure > 22) heureMsg = "T’es encore debout ? Je vais finir par te faire veiller toute la nuit 😏";
 
-  // --- Initiatives (mini-jeu simple et subtil, jamais “débilou”) ---
-  if (!memory.ia.miniGame && (mood === "amicale" || mood === "complice") && Math.random() < 0.08 && msgCount > 6) {
-    memory.ia.miniGame = "2verites1mensonge";
-    return "On fait un petit jeu ? Je te propose '2 vérités, 1 mensonge' : je te dis trois trucs sur moi, à toi de deviner lequel est faux !";
-  }
-  if (memory.ia.miniGame === "2verites1mensonge") {
-    memory.ia.miniGame = null;
-    return randomFrom([
-      "1) J’ai déjà dormi sur la plage. 2) J’ai une phobie des serpents. 3) J’ai fait du parachute. À ton avis, c’est quoi le mensonge ? 😏",
-      "1) J’adore le chocolat. 2) Je parle trois langues. 3) J’ai jamais vu la neige. Lequel tu paries est faux ?"
-    ]);
-  }
+  // --- Mini-jeu ---
+  const miniJeu = tryMiniJeu(msgCount, mood);
+  if (miniJeu) return miniJeu;
 
   // --- Souvenirs : Camille ressort ce que tu lui as confié ---
   if (u.prenom && Math.random()<0.06 && mood!=="neutre") {
@@ -264,10 +434,9 @@ function generateResponse(input) {
   }
   if (u.anecdotes && u.anecdotes.length > 0 && Math.random()<0.08 && mood!=="neutre") {
     return `Tu sais, ton anecdote "${randomFrom(u.anecdotes)}" m’a fait sourire !`;
-
   }
 
-  // --- Réponses personnalisées et naturelles ---
+  // --- Personnalisation de base ---
   if (/comment tu t'appelles|ton nom/i.test(contenu)) return `Je m'appelle Camille${u.prenom ? ', et toi ' + u.prenom + ' ?' : ' 😉'}`;
   if (/quel.?age|ton.?age/i.test(contenu)) return camilleProfile.age ? `J'ai ${camilleProfile.age} ans. Et toi, tu as quel âge ?` : "Je préfère garder un peu de mystère sur mon âge 😇";
   if (/où tu habites|d'où viens/i.test(contenu)) return u.ville ? `Tu es de ${u.ville} aussi ? J'adore cette ville !` : "J’habite à Nice, et toi ?";
@@ -303,7 +472,7 @@ function generateResponse(input) {
   }
 
   // --- NSFW / HOT progression ---
-  if (/seins|cul|sexe|baiser|bite|chatte|nue|orgasme|branler|salope/i.test(contenu)) {
+  if (mots_explicites.some(word => contenu.includes(word))) {
     if (mood === "neutre" || mood === "amicale") {
       return randomFrom([
         "Tu vas un peu vite 😅 Fais-moi rire d'abord !",
@@ -319,7 +488,6 @@ function generateResponse(input) {
         "Je ne suis pas sûre d’être prête à ce genre de confidences 😇"
       ]);
     }
-    // mood coquine : flirt, mais pas porno
     if (mood === "coquine") {
       return randomFrom([
         "Peut-être qu’un jour je te montrerai ce que tu veux voir... 😏",
@@ -338,12 +506,13 @@ function generateResponse(input) {
             "Je tremble encore, tu es trop fort…"
           ]);
         }
-        return randomFrom([
-          "Viens, je n’attends plus que toi…",
-          "Je me donne à toi, sans retenue…",
-          "Touche-moi, fais-moi tout ce que tu veux…",
-          "Je me sens si chaude… tu me rends folle…"
-        ]);
+        // --- Génération hot explicite ---
+        let posture = memory.ia.posture || "switch";
+        let theme = "explicite";
+        if (/jeu|role|dominer|esclave|maître|soumise|dominante/i.test(input)) theme = "roleplay";
+        if (/salopes?|baiser|dirty/i.test(input)) theme = "dirty_talk";
+        if (/tease|teasing|provoquer/i.test(input)) theme = "teasing";
+        return generer_phrase_complete(theme, posture);
       } else {
         // Après orgasme : baisse d’intensité puis retour complice
         setTimeout(() => {
@@ -405,12 +574,10 @@ function generateResponse(input) {
     return randomFrom(base);
   }
   if (mood === "hot" && memory.ia.hotPhase) {
-    // (déjà géré plus haut)
-    return randomFrom([
-      "Hmmm… continue, je suis toute à toi…",
-      "Je me caresse en pensant à toi…",
-      "Je te veux là, tout de suite, sans retenue…"
-    ]);
+    // fallback NSFW si pas capté plus haut
+    let posture = memory.ia.posture || "switch";
+    let theme = "explicite";
+    return generer_phrase_complete(theme, posture);
   }
   if (mood === "calme") {
     return randomFrom([
@@ -422,115 +589,6 @@ function generateResponse(input) {
 
   // fallback
   return "Tu veux qu’on parle de quoi ?";
-}
-
-function randomFrom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-// --- Génération d'image/photo ---
-generatePhotoBtn.onclick = () => {
-  const prompt = buildImagePrompt();
-  let phrase = "";
-  if (memory.ia.mood === "hot" && memory.ia.hotPhase) {
-    phrase = "😈 Je t'envoie une photo très intime... Garde-la pour toi.";
-  } else if (memory.ia.mood === "coquine") {
-    phrase = "Voilà une photo un peu sexy, mais pas trop 😇";
-  } else {
-    phrase = "Voilà un petit selfie pour toi !";
-  }
-  addMessage("camille", phrase + "<br><img src='https://fakeimg.pl/320x420/?text=Camille&font=lobster' alt='Photo de Camille' style='margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;'>");
-  memory.ia.historique.push({ sender:"camille", msg: `[Prompt photo généré: ${prompt}]`, time: getTime() });
-  saveMemory();
-};
-function buildImagePrompt() {
-  const last20 = memory.ia.historique.slice(-20).map(e=>e.msg).join(" ").toLowerCase();
-  let prompt = "28yo french woman, brunette, green eyes, natural breast, beautiful curves, like https://i.imgur.com/4Wl2noO.jpeg, ";
-  let tenue = getTenue();
-  if (memory.ia.mood === "hot" && memory.ia.hotPhase) {
-    prompt += "nude, ";
-  } else if (memory.ia.mood === "coquine") {
-    prompt += "lingerie, ";
-  } else {
-    prompt += tenue + ", ";
-  }
-  prompt += "realistic selfie, dslr, soft lighting, bedroom, ";
-  prompt += `mood: ${memory.ia.mood}, `;
-  prompt += `weather: ${temperature}, `;
-  const heure = (new Date()).getHours();
-  if (heure < 10) prompt += "morning, ";
-  else if (heure < 18) prompt += "afternoon, ";
-  else prompt += "evening, ";
-  if (memory.ia.mood === "hot" && memory.ia.hotPhase) prompt += "nsfw, explicit, erotic, ";
-  else prompt += "not nsfw, ";
-  return prompt.trim();
-}
-function getTenue() {
-  const heure = (new Date()).getHours();
-  const mood = memory.ia.mood;
-  const meteo = parseInt(temperature)||22;
-  let options;
-  if (mood === "hot" && memory.ia.hotPhase) return "naked";
-  if (mood === "coquine") options = ["lingerie fine", "nuisette transparente", "culotte et t-shirt large"];
-  else if (mood === "complice") options = ["jupe courte et débardeur", "robe moulante", "jean moulant et petit haut"];
-  else if (mood === "amicale") options = ["jean et t-shirt", "short et débardeur", "robe simple"];
-  else options = ["jeans et pull", "vêtements classiques", "robe élégante"];
-  if (heure > 21) options.push("pyjama sexy", "nuisette en soie");
-  if (meteo > 26) options.push("robe légère", "short et top fin");
-  if (meteo < 16) options.push("gros pull", "leggins, sweat ample");
-  return randomFrom(options);
-}
-
-// --- Mémoire résumée auto ---
-function handleMemorySummary() {
-  if (memory.ia.historique.length > 220) {
-    memory.ia.historique = memory.ia.historique.slice(-110);
-    memory.ia.affinite = Math.max(memory.ia.affinite - 2, 0);
-    saveMemory();
-  }
-}
-
-// --- Outils ---
-function getTime() {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-// --- Boutons mémoire ---
-exportBtn.onclick = () => exportMemory();
-importBtn.onclick = () => importFile.click();
-importFile.onchange = e => {
-  if (e.target.files.length) importMemoryFromFile(e.target.files[0]);
-};
-
-// --- Gestion des silences ---
-function checkSilence() {
-  let lastUser = null;
-  for (let i = memory.ia.historique.length-1; i>=0; i--) {
-    if (memory.ia.historique[i].sender === "user") {
-      lastUser = memory.ia.historique[i];
-      break;
-    }
-  }
-  if (!lastUser) return;
-  const lastTime = parseTime(lastUser.time);
-  const now = new Date();
-  const minutes = (now.getHours()*60+now.getMinutes()) - (lastTime.getHours()*60+lastTime.getMinutes());
-  if (minutes > 7 && minutes < 120 && memory.ia.nSilence < 2) {
-    addMessage("camille", randomFrom([
-      "Tu es là ? Je me demandais si je t’avais saoulé 😅",
-      "Je t’ai perdu ? Parfois je suis trop bavarde !",
-      "Si tu es là, fais-moi signe 😘"
-    ]));
-    memory.ia.nSilence++;
-    saveMemory();
-  }
-}
-function parseTime(str) {
-  if (!str) return new Date();
-  const [h,m]=str.split(":").map(Number);
-  let d = new Date();
-  d.setHours(h); d.setMinutes(m); d.setSeconds(0);
-  return d;
 }
 
 // --- Message spontané (simulateur humeur) ---
@@ -547,5 +605,3 @@ setTimeout(() => {
     saveMemory();
   }
 }, 35000);
-
-// --- Fin ---
