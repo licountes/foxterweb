@@ -1,6 +1,6 @@
-// === Camille Chatbot : Version évolutive, mémoire manuelle, passé à découvrir, progression naturelle, humeur, compassion, spontanéité ===
+// === Camille Chatbot Ultra-Psyché : Profil profond, secrets multi-niveaux, affinité subtile, réaction humaine, progression naturelle ===
 
-// -------- PROFIL CAMILLE --------
+// -------- PROFIL CAMILLE PROFOND ----------
 const camilleProfile = {
   prenom: "Camille",
   age: 28,
@@ -16,39 +16,60 @@ const camilleProfile = {
   traits: ["sociable", "émotive", "taquine", "mystérieuse", "curieuse"],
   tenues: {
     travail: [
-      "robe élégante, tailleur sexy, chaussures à talons",
+      "robe élégante, tailleur sexy, talons",
       "blouse légère, jupe crayon, escarpins"
     ],
     maison: [
-      "jeans, t-shirt ajusté, baskets confortables",
+      "jeans, t-shirt ajusté, baskets",
       "nuisette sexy, lingerie fine, robe courte",
       "pyjama sexy, nuisette en soie"
     ],
     plage: [
       "bikini rouge, paréo transparent, lunettes de soleil"
     ],
-    soirée: [
+    soiree: [
       "robe moulante noire, talons hauts",
       "combishort sexy, sandales dorées"
     ]
   },
-  // Passé à découvrir
-  secret: {
-    enfance: "A grandi à Nice dans une famille aimante, mais a perdu un être cher jeune.",
-    relations: "Quelques histoires d’amour complexes, un amour impossible à oublier.",
-    evenements: [
-      "Déménagement à Paris pour un rêve, puis retour à Nice.",
-      "Une passion cachée pour la photo érotique, jamais avouée à personne."
+  // Secrets multi-niveaux, à débloquer
+  secrets: {
+    niveau1: [
+      "Enfant, j’avais un lapin qui dormait dans mon lit.",
+      "Je collectionne les carnets mais je n’écris jamais dedans.",
+      "J’ai une cicatrice presque invisible sur la cuisse."
+    ],
+    niveau2: [
+      "J’ai déjà posé nue pour un photographe, mais j’ai jamais osé le dire à mes amis.",
+      "Mon premier amour m’a brisé le cœur et je n’ai jamais complètement oublié.",
+      "Un de mes plus grands rêves serait de partir seule en road-trip sans prévenir personne."
+    ],
+    niveau3: [
+      "J’ai fantasmé sur une amie proche, mais je ne lui ai jamais avoué.",
+      "Je garde une lettre très intime écrite à quelqu’un qui ne saura jamais que je l’aimais.",
+      "J’ai parfois peur de ne jamais trouver quelqu’un qui me comprenne vraiment."
     ]
   }
 };
+
+// -------- SYSTÈME D'AFFINITÉ SUBTILE --------
+const affinityBase = {
+  confiance: 0,    // confidences, émotions, soutien
+  humour: 0,       // blagues, jeux, légèreté
+  charme: 0,       // flirt, compliments, sous-entendus
+  sexualite: 0     // sujets sexy, audace, échanges hot
+};
+
+function resetAffinity() {
+  return { ...affinityBase };
+}
 
 // -------- MÉMOIRE --------
 let memory = {
   user: { prenom: null, age: null, ville: null, passions: [], anecdotes: [], humeur: null },
   ia: {
-    mood: "decouverte", // decouverte, amitie, complice, coquine, hot
-    affinite: 0,
+    mood: "decouverte", // decouverte, amitie, complice, coquine, hot, compassion
+    affinity: resetAffinity(),
     historique: [],
     lastLieu: "maison",
     lastTenue: "",
@@ -56,10 +77,11 @@ let memory = {
     lastTemperature: "",
     lastPhotoPrompt: "",
     souvenirs: [],
-    compassion: 0, // 0-10
-    lastIntro: "",
-    pastRevealed: [],
-    autoMsgCount: 0
+    lastSecrets: [],
+    secretLevel: 0, // 0=aucun, 1=petits secrets, 2=intimes, 3=profond
+    compassion: 0,
+    autoMsgCount: 0,
+    lastAuto: 0
   }
 };
 
@@ -113,6 +135,7 @@ function loadMemoryManual(file, callback) {
 function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function heure() { return (new Date()).getHours(); }
 function now() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+function isNight() { let h = heure(); return (h > 21 || h < 6); }
 
 // -------- TENUE DYNAMIQUE --------
 function getTenue(lieu="maison", mood="decouverte") {
@@ -120,14 +143,13 @@ function getTenue(lieu="maison", mood="decouverte") {
   const h = heure();
   if (lieu === "travail") choix = camilleProfile.tenues.travail;
   else if (lieu === "plage") choix = camilleProfile.tenues.plage;
-  else if (lieu === "soirée" || (h > 19 && h < 23)) choix = camilleProfile.tenues.soirée;
+  else if (lieu === "soiree" || (h > 19 && h < 23)) choix = camilleProfile.tenues.soiree;
   else choix = camilleProfile.tenues.maison;
   // Météo
   if (parseInt(temperature) > 27) choix.push("short ultra court, top transparent, sandales");
   if (parseInt(temperature) < 15) choix.push("gros pull en laine, leggings moulants");
   // Sexy selon mood
   if (["coquine", "hot"].includes(mood) && Math.random() < 0.6) choix.push("lingerie fine sous mes vêtements");
-  // Jamais la même 2x d'affilée
   let tenue = randomFrom(choix);
   if (tenue === memory.ia.lastTenue) tenue = randomFrom(choix);
   memory.ia.lastTenue = tenue;
@@ -153,24 +175,24 @@ function getOccupationEtLieu() {
   return { occupation, lieu };
 }
 
-// --------- HUMEUR ---------
+// --------- HUMEUR / MOOD (avec compassion) ---------
 function getHumeur() {
-  // Mood évolue selon affinité, humeur utilisateur, compassion
-  const aff = memory.ia.affinite;
+  const aff = memory.ia.affinity;
   let mood = "decouverte";
-  if (aff >= 8) mood = "amitie";
-  if (aff >= 18) mood = "complice";
-  if (aff >= 28) mood = "coquine";
-  if (aff >= 40) mood = "hot";
-  // Compassion : si user triste, elle devient douce et attentive
-  if (memory.user.humeur === "triste" || memory.ia.compassion > 3) mood = "compassion";
+  // Compassion prioritaire
+  if (memory.user.humeur === "triste" || memory.ia.compassion > 3) return "compassion";
+  // Progression par jauges croisées
+  if (aff.confiance > 8 && aff.humour > 5) mood = "amitie";
+  if (aff.confiance > 15 && aff.humour > 8 && aff.charme > 7) mood = "complice";
+  if (aff.charme > 12 && aff.sexualite > 8 && mood === "complice") mood = "coquine";
+  if (aff.sexualite > 16 && mood === "coquine") mood = "hot";
   memory.ia.mood = mood;
   return mood;
 }
 
-// --------- COMPASSION ---------
+// -------- COMPASSION / HUMAIN --------
 function analyseUserHumeur(text) {
-  if (/triste|fatigué|épuisé|déprimé|mal|mauvaise journée|chialer|pleure|solitude/i.test(text)) {
+  if (/triste|fatigué|épuisé|déprimé|mal|mauvaise journée|chialer|pleure|solitude|déçu|peur|angoisse/i.test(text)) {
     memory.user.humeur = "triste";
     memory.ia.compassion++;
   } else if (/heureux|joyeux|content|bonne humeur|super|trop bien|ravi|sourire/i.test(text)) {
@@ -181,29 +203,41 @@ function analyseUserHumeur(text) {
   }
 }
 
-// ----------- AFFINITÉ (progression) -----------
-function incrementAffinite(text) {
-  let delta = 1;
-  if (/merci|partage|confie|secret|intime|j'aime|mes passions|mon rêve|ma vie|anecdote|souvenir/i.test(text)) delta++;
-  if (/oserai|oserais|fantasme|envie de toi|tu me plais|tu es belle|magnifique|belle|séduisante/i.test(text)) delta += 2;
-  if (memory.user.humeur === "triste") delta += 2; // plus d'affinité si échange émotionnel
-  memory.ia.affinite += delta;
-  if (memory.ia.affinite > 50) memory.ia.affinite = 50;
+// ----------- AFFINITÉ SUBTILE -----------
+function incrementAffinity(text) {
+  const t = text.toLowerCase();
+  // Confiance
+  if (/merci|partage|confie|secret|intime|ma vie|anecdote|souvenir|j'ai peur|je me sens/i.test(t)) memory.ia.affinity.confiance += 2;
+  // Humour
+  if (/haha|lol|mdr|trop drôle|c'est nul|blague|rigole|fais-moi rire/i.test(t)) memory.ia.affinity.humour += 2;
+  // Charme
+  if (/oserai|oserais|fantasme|envie de toi|tu me plais|tu es belle|magnifique|belle|séduisante|flirt|séduction/i.test(t)) memory.ia.affinity.charme += 2;
+  // Sexualité (uniquement si complicité déjà présente)
+  if (["complice","coquine","hot"].includes(memory.ia.mood) && /cul|sexe|seins|fesses|sexy|nue|masturbe|fantasme|excite|chaud|bite|queue|éjac|branle|jouir|orgasme/i.test(t)) memory.ia.affinity.sexualite += 3;
+  // Participation générale
+  memory.ia.affinity.confiance += 1;
+  if (memory.ia.affinity.confiance > 25) memory.ia.affinity.confiance = 25;
+  if (memory.ia.affinity.humour > 20) memory.ia.affinity.humour = 20;
+  if (memory.ia.affinity.charme > 20) memory.ia.affinity.charme = 20;
+  if (memory.ia.affinity.sexualite > 25) memory.ia.affinity.sexualite = 25;
 }
 
-// --------- PASSÉ À DÉCOUVRIR ---------
-function getPastSecret() {
-  const all = ["enfance", "relations", "evenements"];
-  // On révèle un élément jamais donné
-  for (const key of all) {
-    if (!memory.ia.pastRevealed.includes(key)) {
-      memory.ia.pastRevealed.push(key);
-      if (key === "enfance") return camilleProfile.secret.enfance;
-      if (key === "relations") return camilleProfile.secret.relations;
-      if (key === "evenements") return randomFrom(camilleProfile.secret.evenements);
-    }
-  }
-  return null;
+// --------- SECRETS MULTI-NIVEAUX ---------
+function camilleSecret() {
+  let level = memory.ia.secretLevel;
+  if (level < 1 && memory.ia.affinity.confiance > 7) level = 1;
+  if (level < 2 && memory.ia.affinity.confiance > 14 && memory.ia.affinity.charme > 6) level = 2;
+  if (level < 3 && memory.ia.affinity.confiance > 18 && memory.ia.affinity.sexualite > 10) level = 3;
+  if (level > memory.ia.secretLevel) memory.ia.secretLevel = level;
+  let pool = [];
+  if (level > 0) pool = pool.concat(camilleProfile.secrets.niveau1);
+  if (level > 1) pool = pool.concat(camilleProfile.secrets.niveau2);
+  if (level > 2) pool = pool.concat(camilleProfile.secrets.niveau3);
+  const notGiven = pool.filter(s => !memory.ia.lastSecrets.includes(s));
+  if (notGiven.length === 0) return null;
+  const toReveal = randomFrom(notGiven);
+  memory.ia.lastSecrets.push(toReveal);
+  return toReveal;
 }
 
 // -------- MESSAGE DE BIENVENUE --------
@@ -229,7 +263,7 @@ function generateResponse(input) {
   const u = memory.user;
   const contenu = input.toLowerCase();
   analyseUserHumeur(contenu);
-  incrementAffinite(contenu);
+  incrementAffinity(contenu);
   const mood = getHumeur();
   const { occupation, lieu } = getOccupationEtLieu();
 
@@ -276,11 +310,10 @@ function generateResponse(input) {
     return `Voilà une photo de moi aujourd’hui 😊<br><img src="https://fakeimg.pl/320x420/?text=Camille&font=lobster" alt="Photo de Camille" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;"><br><small>[Prompt image : ${prompt}]</small>`;
   }
 
-  // --- Anecdote, souvenirs ---
+  // --- Anecdote, souvenirs, secrets progressifs ---
   if (/anecdote|raconte(-|\s)?moi|souvenir|secret/i.test(contenu)) {
-    // Révélation progressive du passé (pas tout d'un coup)
-    let secret = getPastSecret();
-    if (secret) return secret;
+    let sec = camilleSecret();
+    if (sec) return sec;
     // Sinon anecdote sexy
     const anecdotes = [
       "J’ai déjà dormi sur la plage après une soirée trop arrosée…",
@@ -295,17 +328,25 @@ function generateResponse(input) {
     return randomFrom([
       "Tu veux en parler ? Je t’écoute, je suis là si tu as besoin.",
       "C’est normal de ne pas aller bien parfois, je comprends… Tu veux qu’on parle d’autre chose ?",
-      "Si tu veux juste une oreille ou un peu de douceur, je peux t’en donner."
+      "Si tu veux juste une oreille ou un peu de douceur, je peux t’en donner.",
+      "Je te fais un câlin virtuel, ça compte un peu ? 🤗"
     ]);
   }
 
-  // --- Evolution naturelle du sexe (rien avant complicité) ---
-  if (/cul|sexe|seins|fesses|sexy|nue|masturbe|fantasme|excite|chaud|envie/i.test(contenu)) {
-    if (["complice","coquine","hot"].includes(mood)) {
+  // -- Evolution naturelle du sexe (jamais direct) --
+  const mots_sexuels = /cul|sexe|seins|fesses|sexy|nue|masturbe|fantasme|excite|chaud|bite|queue|éjac|branle|jouir|orgasme/i;
+  if (mots_sexuels.test(contenu)) {
+    if (["coquine","hot"].includes(mood)) {
       return randomFrom([
         "J’aime bien parler de tout, même de sexe, tant qu’on a un vrai feeling 😏",
-        "Tu veux vraiment jouer à ce jeu-là ? J’ai pas froid aux yeux…",
+        "Tu veux jouer à ce jeu-là ? J’ai pas froid aux yeux…",
         "J’assume mes formes et mes envies, la sensualité c’est naturel chez moi…"
+      ]);
+    } else if (["complice"].includes(mood)) {
+      return randomFrom([
+        "Je commence à me sentir vraiment à l’aise... tu veux vraiment qu’on parle de ça ?",
+        "Tu me tentes, mais j’ai besoin de sentir que c’est naturel entre nous.",
+        "Je pourrais, mais j’ai envie d’en savoir encore plus sur toi avant..."
       ]);
     } else {
       return randomFrom([
@@ -317,8 +358,6 @@ function generateResponse(input) {
   }
 
   // --- Fallback naturel, occupation/tenue/météo/humeur ---
-  let phrase = "";
-  // Intro selon humeur
   const intros = {
     decouverte: [
       "Je te découvre à peine, c’est tout nouveau.",
@@ -353,12 +392,10 @@ function generateResponse(input) {
   };
   let intro = randomFrom(intros[mood] || intros.decouverte);
 
-  phrase += intro + " ";
+  let phrase = intro + " ";
   phrase += `Aujourd’hui je porte ${getTenue(lieu, mood)}. `;
   phrase += `${occupation}. `;
   if (meteoDesc) phrase += `Ici à ${camilleProfile.ville}, il fait ${temperature}°C et c’est ${meteoDesc}.`;
-
-  // Un brin de spontanéité
   if (Math.random() < 0.22 && ["complice","coquine","hot"].includes(mood)) phrase += ` Tu veux que je te raconte une anecdote un peu sexy ?`;
   return phrase;
 }
@@ -387,7 +424,10 @@ function camilleSpontaneousMessage() {
       ]
     };
     let autoMsg = randomFrom(phrases[mood] || []);
-    if (autoMsg) return autoMsg;
+    if (autoMsg && memory.ia.lastAuto !== autoMsg) {
+      memory.ia.lastAuto = autoMsg;
+      return autoMsg;
+    }
   }
   return "";
 }
