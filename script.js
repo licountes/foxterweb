@@ -1,30 +1,125 @@
 // === Camille Chat Script v5.1 ===
-// Bloc 1/3 : Bibliothèque hot, utilitaires, mémoire, UI, setup
+// Script complet, bibliothèque hot intégrée, aucun {...}, prêt à coller
 
 // ======= Bibliothèque de mots hot, classée par thème/posture =======
 const mots_hot = {
     "teasing": {
-        "dominante": {...},
-        "soumise": {...},
-        "switch": {...}
+        "dominante": {
+            "corps": ["regard", "souffle", "mains", "lèvres", "cuisses", "dos", "cheveux", "seins", "cou", "murmure"],
+            "verbes": ["attirer", "captiver", "dominer", "jouer", "chuchoter", "fixer", "caresser", "forcer", "prendre", "toucher"],
+            "adjectifs": ["ardent", "puissant", "profond", "fiévreux", "dominant", "séduisant", "féroce", "sauvage", "magnétique", "captivant"],
+            "intensites": ["doucement", "lentement", "avec intensité", "sans retenue", "avec passion", "profondément", "ardemment"],
+            "expressions": [
+                "je contrôle ton désir", "tu es à moi", "je vais t’ensorceler", "tu ne peux pas résister", "je te veux à genoux"
+            ]
+        },
+        "soumise": {
+            "corps": ["joues", "mains", "lèvres", "ventre", "cuisses", "seins", "cou", "dos", "murmure", "regard"],
+            "verbes": ["languir", "suppléer", "attendre", "trembler", "fondre", "offrir", "désirer", "frissonner", "caresser", "gémir"],
+            "adjectifs": ["fragile", "tendre", "douce", "timide", "sensible", "chaleureuse", "soumise", "attentive", "fragile", "émue"],
+            "intensites": ["doucement", "timidement", "avec envie", "longuement", "avec douceur", "lentement", "sensiblement"],
+            "expressions": [
+                "je suis à toi", "je fonds sous ton regard", "je veux te plaire", "je t’attends", "fais de moi ce que tu veux"
+            ]
+        },
+        "switch": {
+            "corps": ["mains", "lèvres", "regard", "cuisses", "ventre", "dos", "joues", "seins", "cou", "murmure"],
+            "verbes": ["flirter", "surprendre", "changer", "jouer", "toucher", "attirer", "frissonner", "caresser", "découvrir", "captiver"],
+            "adjectifs": ["électrisant", "imprévisible", "voluptueux", "attirant", "fougueux", "tendre", "passionné", "sensible", "libre", "mystérieux"],
+            "intensites": ["doucement", "avec passion", "à pleine force", "lentement", "par surprise", "avec envie", "profondément"],
+            "expressions": [
+                "je joue avec toi", "tu ne sais jamais ce qui t’attend", "entre douceur et passion", "je te surprends", "on s’adapte à nos envies"
+            ]
+        }
     },
     "explicite": {
-        "dominante": {...},
-        "soumise": {...},
-        "switch": {...}
+        "dominante": {
+            "corps": ["chatte", "cul", "seins", "tétons", "bouche", "cou", "cuisses", "mains", "fesses", "clitoris"],
+            "verbes": ["pénétrer", "forcer", "dominer", "mordre", "claquer", "attraper", "presser", "ordre", "soumettre", "exploser"],
+            "adjectifs": ["humide", "chaud", "tendu", "brûlant", "profond", "violent", "sauvage", "fiévreux", "endurci", "dur"],
+            "intensites": ["sauvagement", "profondément", "avec force", "à pleine puissance", "brutalement", "sans retenue", "intensément"],
+            "expressions": [
+                "je vais te faire crier", "tu vas jouir fort", "tu es à genoux devant moi", "je prends ce qui m’appartient", "tu es mon jouet"
+            ]
+        },
+        "soumise": {
+            "corps": ["chatte", "cul", "seins", "bouche", "mains", "cuisses", "clitoris", "fesses", "langue", "dents"],
+            "verbes": ["supplie", "gémir", "trembler", "offrir", "frissonner", "languir", "sucer", "embrasser", "fondre", "jouir"],
+            "adjectifs": ["humide", "tendre", "fragile", "chaleureux", "émue", "soumise", "chaude", "appétissante", "fragile", "sensuelle"],
+            "intensites": ["doucement", "timidement", "avec envie", "longuement", "passionnément", "ardemment", "intensément"],
+            "expressions": [
+                "fais-moi jouir", "je suis ta salope", "prends-moi fort", "je veux sentir ta queue en moi", "je fonds sous tes caresses"
+            ]
+        },
+        "switch": {
+            "corps": ["chatte", "cul", "seins", "bouche", "mains", "cuisses", "clitoris", "fesses", "langue", "dents"],
+            "verbes": ["forcer", "répondre", "changer", "embrasser", "pénétrer", "jouir", "gémir", "trembler", "caresser", "mordre"],
+            "adjectifs": ["humide", "chaud", "voluptueux", "intense", "ardent", "tendre", "sauvage", "passionné", "fragile", "libre"],
+            "intensites": ["sauvagement", "doucement", "avec force", "à pleine puissance", "lentement", "ardemment", "profondément"],
+            "expressions": [
+                "je suis ta salope tendre et ta déesse cruelle", "prends-moi comme tu veux", "je t’attends entre douceur et violence", "fais-moi perdre la tête", "tu es à moi"
+            ]
+        }
     },
     "roleplay": {
-        "dominante": {...},
-        "soumise": {...},
-        "switch": {...}
+        "dominante": {
+            "corps": ["mains", "menottes", "joues", "cou", "cheveux", "seins", "ventre", "fesses", "bouche", "cuisses"],
+            "verbes": ["ordre", "punir", "capturer", "forcer", "exiger", "dominer", "attacher", "contrôler", "maîtriser", "forcer"],
+            "adjectifs": ["strict", "impitoyable", "autoritaire", "ferme", "inflexible", "puissant", "dominant", "dur", "violent", "sévère"],
+            "intensites": ["impitoyablement", "strictement", "avec autorité", "sans pitié", "fermement", "brutalement", "à fond"],
+            "expressions": [
+                "tu es mon esclave", "obéis-moi sans discuter", "tu feras ce que je veux", "à genoux devant moi", "tu n’as pas le choix"
+            ]
+        },
+        "soumise": {
+            "corps": ["genoux", "mains", "joues", "cou", "ventre", "dos", "lèvres", "poitrine", "cuisses", "bouche"],
+            "verbes": ["obéir", "servir", "supplie", "attendre", "fondre", "implorer", "offrir", "répéter", "espérer", "céder"],
+            "adjectifs": ["timide", "fragile", "docile", "soumise", "fragile", "émue", "hésitante", "respectueuse", "dévouée", "douce"],
+            "intensites": ["doucement", "timidement", "avec respect", "longuement", "humblement", "passionnément", "ardemment"],
+            "expressions": [
+                "je suis à toi", "je t’appartiens", "fais de moi ce que tu veux", "je te supplie", "je fonds sous ta puissance"
+            ]
+        },
+        "switch": {
+            "corps": ["mains", "joues", "cou", "cuisses", "ventre", "dos", "lèvres", "seins", "bouche", "cheveux"],
+            "verbes": ["jouer", "alterner", "changer", "captiver", "flirter", "explorer", "surprendre", "découvrir", "résister", "céder"],
+            "adjectifs": ["imprévisible", "libre", "voluptueux", "passionné", "sensible", "changeant", "balancé", "équilibré", "mystérieux", "attirant"],
+            "intensites": ["avec passion", "lentement", "doucement", "par surprise", "à pleine puissance", "à fond", "avec envie"],
+            "expressions": [
+                "on joue selon nos envies", "je suis douce et forte", "tu ne sais jamais ce qui vient", "je m’adapte à toi", "entre contrôle et abandon"
+            ]
+        }
     },
     "dirty_talk": {
-        "dominante": {...},
-        "soumise": {...},
-        "switch": {...}
+        "dominante": {
+            "corps": ["bite", "queue", "chatte", "cul", "seins", "tétons", "bouche", "fesses", "doigts", "mains"],
+            "verbes": ["baiser", "foutre", "enculer", "sucer", "claquer", "mordre", "forcer", "claquer", "attraper", "pénétrer"],
+            "adjectifs": ["gros", "humide", "chaud", "dur", "fort", "violent", "sale", "puissant", "ardent", "brûlant"],
+            "intensites": ["fort", "sauvagement", "profondément", "sans retenue", "brutalement", "avec envie", "ardemment"],
+            "expressions": [
+                "je vais te baiser comme une salope", "prends ma queue fort", "nique-moi maintenant", "fais-moi jouir", "tu es mon jouet sexuel"
+            ]
+        },
+        "soumise": {
+            "corps": ["chatte", "cul", "seins", "bouche", "mains", "cuisses", "langue", "fesses", "dents", "clitoris"],
+            "verbes": ["gémir", "jouir", "sucer", "embrasser", "trembler", "fondre", "supplie", "offrir", "frissonner", "languir"],
+            "adjectifs": ["humide", "chaude", "douce", "fragile", "timide", "sensuelle", "émue", "fragile", "passionnée", "chaleureuse"],
+            "intensites": ["doucement", "timidement", "avec envie", "longuement", "passionnément", "ardemment", "intensément"],
+            "expressions": [
+                "je suis ta salope", "prends-moi fort", "je veux sentir ta bite", "je fonds sous tes caresses", "fais-moi jouir"
+            ]
+        },
+        "switch": {
+            "corps": ["mains", "lèvres", "cuisses", "ventre", "joues", "seins", "fesses", "clitoris", "langue", "dents"],
+            "verbes": ["jouer", "changer", "embrasser", "pénétrer", "caresser", "toucher", "attraper", "captiver", "mordre", "gémir"],
+            "adjectifs": ["chaud", "humide", "voluptueux", "intense", "ardent", "tendre", "sauvage", "passionné", "libre", "fragile"],
+            "intensites": ["doucement", "sauvagement", "lentement", "à pleine puissance", "par surprise", "avec envie", "profondément"],
+            "expressions": [
+                "je suis ta salope tendre et ta déesse cruelle", "prends-moi comme tu veux", "je t’attends entre douceur et violence", "fais-moi perdre la tête", "tu es à moi"
+            ]
+        }
     }
 };
-// (Par souci de lisibilité ici, remplace {...} par le contenu complet de chaque objet comme dans ton script précédent.)
 
 const mots_explicites = [
     "chatte", "cul", "seins", "bite", "queue", "pénétrer", "foutre", "enculer",
@@ -50,6 +145,10 @@ function generer_phrase_complete(theme, posture) {
         `Je sens ton ${corps} ${adjectif} qui ${verbe} ${intensite}, et je te dis : ${expression}.`
     );
 }
+
+// ... (tout le reste de ton code tel que tu l’as fourni, sans aucune accolade incomplète, et sans rien changer à tes fonctions ou ta logique)
+// (Tu peux reprendre à partir de const PROFILE_URL = ... et tout coller à la suite.)
+
 
 const PROFILE_URL = "profil_camille.json";
 const AVATAR_URL = "https://i.imgur.com/4Wl2noO.jpeg";
