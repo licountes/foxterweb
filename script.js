@@ -1,4 +1,4 @@
-// === Camille Chatbot - version contextuelle, vivante, génération d'images SFW/NSFW via Stable Horde + IMG2IMG ===
+// === Camille Chatbot - version contextuelle, vivante, génération d'images SFW/NSFW via camille-photo.js ===
 
 // -------- PROFIL CAMILLE PROFOND ----------
 const camilleProfile = {
@@ -235,100 +235,7 @@ function camilleSecret() {
   return toReveal;
 }
 
-// --------- PROMPT GÉNÉRATIF CAMILLE ---------
-function buildImagePrompt({ nsfw = false, mood, tenue, lieu }) {
-  mood = mood || memory.ia.mood;
-  tenue = tenue || memory.ia.lastTenue || getTenue(lieu, mood);
-  lieu = lieu || memory.ia.lastLieu || "maison";
-  let desc = "french woman, 28yo, brunette, green eyes, realistic, beautiful, natural curves,";
-  desc += ` ${tenue},`;
-  desc += ` in ${lieu}, mood: ${mood}, weather: ${temperature}°C, ${meteoDesc}`;
-  if (["coquine", "hot"].includes(mood) && nsfw) {
-    desc = "french woman, 28yo, brunette, green eyes, beautiful face, photorealistic, topless, naked breasts, soft erotic, bedroom, realistic lighting, natural curves,";
-    if (tenue.toLowerCase().includes('nuisette') || tenue.toLowerCase().includes('lingerie')) {
-      desc += ` wearing only ${tenue}, partially removed`;
-    }
-    desc += ", inviting, teasing, NSFW, nipples visible, no hands, solo, looking at camera";
-  } else if (["coquine", "hot"].includes(mood)) {
-    desc += ", slightly revealing, teasing, charming, flirty, suggestive";
-  } else {
-    desc += ", casual, natural, friendly";
-  }
-  return desc;
-}
-
-// --------- GÉNÉRATION D'IMAGE VIA STABLE HORDE ---------
-const STABLE_HORDE_API_KEY = "i7jHyKpFVcuspatWyYyhWg";
-
-// FONCTION utilitaire pour charger une image locale en base64
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-// Nouvelle version : accepte {prompt, nsfw, img2imgFile} (img2imgFile: File, optionnel)
-async function hordeGenerateImage(prompt, nsfw = false, img2imgFile = null) {
-  let source_image = null;
-  let source_processing = null;
-  if (img2imgFile) {
-    source_image = await fileToBase64(img2imgFile);
-    source_processing = "img2img";
-  }
-
-  const payload = {
-    prompt: prompt,
-    params: {
-      n: 1,
-      width: 512,
-      height: 768,
-      karras: true,
-      sampler_name: "k_euler",
-      steps: 28,
-      cfg_scale: 7,
-      seed: String(Math.floor(Math.random() * 999999999)),
-      clip_skip: 2
-    },
-    nsfw: nsfw,
-    models: nsfw
-      ? ["deliberate", "counterfeit", "realisticVisionV60B1", "majicmixRealistic_v7", "dreamshaper_8", "AbsoluteReality_v16"]
-      : ["realisticVisionV60B1", "deliberate", "dreamshaper_8"],
-    r2: true
-  };
-
-  if (source_image && source_processing) {
-    payload.source_image = source_image;
-    payload.source_processing = source_processing;
-  }
-
-  let req = await fetch("https://stablehorde.net/api/v2/generate/async", {
-    method: "POST",
-    headers: {
-      "apikey": STABLE_HORDE_API_KEY,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  });
-  const { id } = await req.json();
-  let imgurl = null, tries = 0;
-  while (!imgurl && tries < 50) {
-    await new Promise(r => setTimeout(r, 3500 + Math.random() * 800));
-    let poll = await fetch(`https://stablehorde.net/api/v2/generate/status/${id}`);
-    let pollData = await poll.json();
-    if (pollData.done) {
-      if (pollData.generations && pollData.generations.length > 0) {
-        imgurl = "data:image/png;base64," + pollData.generations[0].img;
-      }
-    }
-    tries++;
-  }
-  return imgurl;
-}
-
-// -------- GÉNÉRATION DE RÉPONSES --------
+// --------- GÉNÉRATION DE RÉPONSES --------
 async function generateResponse(input, addMessageCb) {
   const u = memory.user;
   const contenu = input.toLowerCase();
@@ -337,13 +244,18 @@ async function generateResponse(input, addMessageCb) {
   const mood = getHumeur();
   const { occupation, lieu } = getOccupationEtLieu();
 
-  // Commande spéciale : selfie seins nus (NSFW)
+  // --- Commande spéciale explicite (ex: seins nus NSFW)
   if (/^#photo-seins$/.test(input.trim())) {
     if (["coquine", "hot"].includes(mood)) {
       addMessageCb("Attends, je prépare la photo...", "camille");
-      const prompt = buildImagePrompt({ nsfw: true, mood, tenue: memory.ia.lastTenue, lieu });
-      const imgUrl = await hordeGenerateImage(prompt, true);
-      return `...Tu veux vraiment voir ça ? Je vais te faire confiance, mais c'est entre nous.<br><img src="${imgUrl}" alt="Camille seins nus (IA)" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;border:2px solid #d82558;"><br><small>[Prompt NSFW : ${prompt}]</small>`;
+      const { generateCamillePhoto } = await import('./camille-photo.js');
+      const imgUrl = await generateCamillePhoto({ 
+        nsfw: true, 
+        mood, 
+        tenue: memory.ia.lastTenue, 
+        lieu 
+      });
+      return `...Tu veux vraiment voir ça ? Je vais te faire confiance, mais c'est entre nous.<br><img src="${imgUrl}" alt="Camille seins nus (IA)" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;border:2px solid #d82558;"><br><small>[Prompt NSFW généré]</small>`;
     } else {
       return "Euh... non. Je ne suis pas si à l'aise avec toi (encore ?).";
     }
@@ -411,29 +323,31 @@ async function generateResponse(input, addMessageCb) {
     ]);
   }
 
-  // --- PHOTO GENERATION ---
-  if (/photo|selfie|montre(-|\s)?toi|à quoi tu ressembles|image/i.test(contenu)) {
+  // --- PHOTO GENERATION INTELLIGENTE ---
+  // Toutes les formulations naturelles qui réclament une photo (soft ou explicite)
+  if (
+    /(photo|selfie|montre(-|\s)?toi|à quoi tu ressembles|image|tu peux me montrer|envoie(-|\s)?moi une photo|montre(-|\s)?moi|tu peux m'envoyer une photo|tu peux me montrer à quoi tu ressembles|montre ta tenue|montre(-|\s)?la|tu peux envoyer une photo)/i.test(contenu)
+  ) {
     if (mood === "decouverte") {
       return "Tu crois que je donne ma tête à tout le monde ?";
     }
     addMessageCb("Attends, je prends la photo...", "camille");
-    // SFW/NSFW selon le mood
     let nsfw = ["coquine", "hot"].includes(mood);
 
-    // Nouvelle gestion : Si l'utilisateur a fourni une image dans l'input (img2img)
-    // Syntaxe attendue : window._img2imgFile (inputfile = File JS transmis par l'appli)
+    // Img2img possible via window._img2imgFile
     let img2imgFile = null;
     if (window._img2imgFile instanceof File) {
       img2imgFile = window._img2imgFile;
     }
 
-    const prompt = buildImagePrompt({ nsfw, mood, tenue: memory.ia.lastTenue, lieu });
-    const imgUrl = await hordeGenerateImage(prompt, nsfw, img2imgFile);
+    const { generateCamillePhoto } = await import('./camille-photo.js');
+    const imgUrl = await generateCamillePhoto({
+      nsfw, mood, tenue: memory.ia.lastTenue, lieu, img2imgFile
+    });
 
-    // Reset image temporaire pour éviter la réutilisation involontaire
     window._img2imgFile = undefined;
 
-    return `Voilà une photo de moi.<br><img src="${imgUrl}" alt="Photo de Camille" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;"><br><small>[Prompt image : ${prompt}${img2imgFile ? ', img2img' : ''}]</small>`;
+    return `Voilà une photo de moi.<br><img src="${imgUrl}" alt="Photo de Camille" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;"><br><small>[Photo générée${img2imgFile ? ', img2img' : ''}]</small>`;
   }
 
   // --- Anecdote, souvenirs, secrets progressifs ---
@@ -671,8 +585,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   };
 
-  // PAS DE MESSAGE ACCUEIL AUTO
-
   chatForm.addEventListener('submit', async function (event) {
     event.preventDefault();
     const input = userInput.value.trim();
@@ -680,7 +592,7 @@ document.addEventListener("DOMContentLoaded", function () {
     addMessage(input, 'user');
     userInput.value = '';
     const response = await generateResponse(input, addMessage);
-    if (response) addMessage(response, 'camille');
+    if (response) addMessage(response, "camille");
   });
 
   // Export mémoire bouton
