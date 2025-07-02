@@ -1,4 +1,4 @@
-// === Camille Chatbot - version contextuelle, vivante, génération d'images SFW/NSFW via Stable Horde ===
+// === Camille Chatbot - version contextuelle, vivante, génération d'images SFW/NSFW via Stable Horde + IMG2IMG ===
 
 // -------- PROFIL CAMILLE PROFOND ----------
 const camilleProfile = {
@@ -259,8 +259,26 @@ function buildImagePrompt({ nsfw = false, mood, tenue, lieu }) {
 
 // --------- GÉNÉRATION D'IMAGE VIA STABLE HORDE ---------
 const STABLE_HORDE_API_KEY = "i7jHyKpFVcuspatWyYyhWg";
-async function hordeGenerateImage(prompt, nsfw = false) {
-  // 1. Demande l'image
+
+// FONCTION utilitaire pour charger une image locale en base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Nouvelle version : accepte {prompt, nsfw, img2imgFile} (img2imgFile: File, optionnel)
+async function hordeGenerateImage(prompt, nsfw = false, img2imgFile = null) {
+  let source_image = null;
+  let source_processing = null;
+  if (img2imgFile) {
+    source_image = await fileToBase64(img2imgFile);
+    source_processing = "img2img";
+  }
+
   const payload = {
     prompt: prompt,
     params: {
@@ -271,7 +289,7 @@ async function hordeGenerateImage(prompt, nsfw = false) {
       sampler_name: "k_euler",
       steps: 28,
       cfg_scale: 7,
-      seed: String(Math.floor(Math.random() * 999999999)), // PATCH : seed en string !
+      seed: String(Math.floor(Math.random() * 999999999)),
       clip_skip: 2
     },
     nsfw: nsfw,
@@ -280,7 +298,12 @@ async function hordeGenerateImage(prompt, nsfw = false) {
       : ["realisticVisionV60B1", "deliberate", "dreamshaper_8"],
     r2: true
   };
-  // 2. Appel
+
+  if (source_image && source_processing) {
+    payload.source_image = source_image;
+    payload.source_processing = source_processing;
+  }
+
   let req = await fetch("https://stablehorde.net/api/v2/generate/async", {
     method: "POST",
     headers: {
@@ -290,7 +313,6 @@ async function hordeGenerateImage(prompt, nsfw = false) {
     body: JSON.stringify(payload)
   });
   const { id } = await req.json();
-  // 3. Polling jusqu'à ce que l'image soit prête
   let imgurl = null, tries = 0;
   while (!imgurl && tries < 50) {
     await new Promise(r => setTimeout(r, 3500 + Math.random() * 800));
@@ -397,9 +419,21 @@ async function generateResponse(input, addMessageCb) {
     addMessageCb("Attends, je prends la photo...", "camille");
     // SFW/NSFW selon le mood
     let nsfw = ["coquine", "hot"].includes(mood);
+
+    // Nouvelle gestion : Si l'utilisateur a fourni une image dans l'input (img2img)
+    // Syntaxe attendue : window._img2imgFile (inputfile = File JS transmis par l'appli)
+    let img2imgFile = null;
+    if (window._img2imgFile instanceof File) {
+      img2imgFile = window._img2imgFile;
+    }
+
     const prompt = buildImagePrompt({ nsfw, mood, tenue: memory.ia.lastTenue, lieu });
-    const imgUrl = await hordeGenerateImage(prompt, nsfw);
-    return `Voilà une photo de moi.<br><img src="${imgUrl}" alt="Photo de Camille" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;"><br><small>[Prompt image : ${prompt}]</small>`;
+    const imgUrl = await hordeGenerateImage(prompt, nsfw, img2imgFile);
+
+    // Reset image temporaire pour éviter la réutilisation involontaire
+    window._img2imgFile = undefined;
+
+    return `Voilà une photo de moi.<br><img src="${imgUrl}" alt="Photo de Camille" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;"><br><small>[Prompt image : ${prompt}${img2imgFile ? ', img2img' : ''}]</small>`;
   }
 
   // --- Anecdote, souvenirs, secrets progressifs ---
@@ -611,6 +645,31 @@ document.addEventListener("DOMContentLoaded", function () {
     chatWindow.appendChild(msgDiv);
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }
+
+  // Ajoute un input pour l'image source (img2img)
+  const img2imgInput = document.createElement("input");
+  img2imgInput.type = "file";
+  img2imgInput.accept = "image/*";
+  img2imgInput.style = "display:none;";
+  document.body.appendChild(img2imgInput);
+
+  // Ajoute un bouton pour uploader une image source pour img2img
+  const img2imgBtn = document.createElement("button");
+  img2imgBtn.innerText = "Photo source (img2img)";
+  img2imgBtn.type = "button";
+  img2imgBtn.style = "margin-left:15px;";
+  if (chatForm) {
+    chatForm.appendChild(img2imgBtn);
+  }
+
+  img2imgBtn.onclick = () => img2imgInput.click();
+  img2imgInput.onchange = function (e) {
+    const file = e.target.files[0];
+    if (file) {
+      window._img2imgFile = file;
+      alert("Image source chargée ! Tape 'photo' pour générer une image inspirée de ta photo.");
+    }
+  };
 
   // PAS DE MESSAGE ACCUEIL AUTO
 
