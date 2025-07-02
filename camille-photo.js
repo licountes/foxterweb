@@ -91,5 +91,8 @@ export async function generateCamillePhoto({ nsfw = false, mood, tenue, lieu, te
     }
     tries++;
   }
+  if (!imgurl) {
+    return null;
+  }
   return imgurl;
 }
