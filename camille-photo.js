@@ -49,8 +49,8 @@ export async function generateCamillePhoto({ nsfw = false, mood, tenue, lieu, te
     prompt: prompt,
     params: {
       n: 1,
-      width: 512,
-      height: 768,
+      width: 384,
+      height: 576,
       karras: true,
       sampler_name: "k_euler",
       steps: 28,
