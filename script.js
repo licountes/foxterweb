@@ -255,6 +255,9 @@ async function generateResponse(input, addMessageCb) {
         tenue: memory.ia.lastTenue, 
         lieu 
       });
+      if (!imgUrl) {
+        return "Désolée, la génération de la photo a échoué (service indisponible ou quota atteint). Réessaie dans quelques minutes !";
+      }
       return `...Tu veux vraiment voir ça ? Je vais te faire confiance, mais c'est entre nous.<br><img src="${imgUrl}" alt="Camille seins nus (IA)" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;border:2px solid #d82558;"><br><small>[Prompt NSFW généré]</small>`;
     } else {
       return "Euh... non. Je ne suis pas si à l'aise avec toi (encore ?).";
@@ -347,6 +350,9 @@ async function generateResponse(input, addMessageCb) {
 
     window._img2imgFile = undefined;
 
+    if (!imgUrl) {
+      return "Désolée, la génération de la photo a échoué (service indisponible ou quota atteint). Réessaie dans quelques minutes !";
+    }
     return `Voilà une photo de moi.<br><img src="${imgUrl}" alt="Photo de Camille" style="margin-top:7px;border-radius:13px;width:90%;max-width:320px;box-shadow:0 6px 22px #e5646f33;"><br><small>[Photo générée${img2imgFile ? ', img2img' : ''}]</small>`;
   }
 
